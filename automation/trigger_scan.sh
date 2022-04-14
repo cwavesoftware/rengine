@@ -40,7 +40,7 @@ wait () {
     while [ ! $scan_status -eq 2 ]
     do
         sleep $sleepTime
-        scan_status=$(curl -s -b cookiejar $1/$last_scan_id | jq '.scanStatus')
+        scan_status=$(curl -s -b cookiejar $1/api/scan/status/$last_scan_id | jq '.scanStatus')
         echo "Scan status = $scan_status"
     done
 }
