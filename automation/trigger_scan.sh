@@ -34,13 +34,13 @@ trigger () {
 }
 
 wait () {
-    last_scan_id=$(curl -b cookiejar -s $1/api/listScanHistory/ | jq '.scan_histories[] | .id'  | head -n 1)
+    last_scan_id=$(curl -k -b cookiejar -s $1/api/listScanHistory/ | jq '.scan_histories[] | .id'  | head -n 1)
     scan_status=-1
     sleepTime=60  # seconds
     while [ ! $scan_status -eq 2 ]
     do
         sleep $sleepTime
-        scan_status=$(curl -s -b cookiejar $1/api/scan/status/$last_scan_id | jq '.scanStatus')
+        scan_status=$(curl -k -s -b cookiejar $1/api/scan/status/$last_scan_id | jq '.scanStatus')
         echo "Scan status = $scan_status"
     done
 }
