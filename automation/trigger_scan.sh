@@ -35,6 +35,7 @@ trigger () {
 
 wait () {
     last_scan_id=$(curl -k -b cookiejar -s $1/api/listScanHistory/ | jq '.scan_histories[] | .id'  | head -n 1)
+    echo "Scan ID = $last_scan_id"
     scan_status=-1
     sleepTime=60  # seconds
     while [ ! $scan_status -eq 2 ]
