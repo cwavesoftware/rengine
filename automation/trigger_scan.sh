@@ -56,7 +56,7 @@ echo "DEBUG: Engine ID: $engine_id"
 trigger $1 $target_id $engine_id $6
 
 if [ $7 = "--wait" ]; then
-    wait
+    wait $1
 fi
 rm cookiejar
 
