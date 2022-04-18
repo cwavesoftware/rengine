@@ -701,18 +701,18 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         output_screenshots_path
     )
 
-    if EYEWITNESS in yaml_configuration \
-        and TIMEOUT in yaml_configuration[EYEWITNESS] \
-        and yaml_configuration[EYEWITNESS][TIMEOUT] > 0:
+    if VISUAL_IDENTIFICATION in yaml_configuration \
+        and TIMEOUT in yaml_configuration[VISUAL_IDENTIFICATION] \
+        and yaml_configuration[VISUAL_IDENTIFICATION][TIMEOUT] > 0:
         eyewitness_command += ' --timeout {}'.format(
-            yaml_configuration[EYEWITNESS][TIMEOUT]
+            yaml_configuration[VISUAL_IDENTIFICATION][TIMEOUT]
         )
 
-    if EYEWITNESS in yaml_configuration \
-        and THREADS in yaml_configuration[EYEWITNESS] \
-        and yaml_configuration[EYEWITNESS][THREADS] > 0:
+    if VISUAL_IDENTIFICATION in yaml_configuration \
+        and THREADS in yaml_configuration[VISUAL_IDENTIFICATION] \
+        and yaml_configuration[VISUAL_IDENTIFICATION][THREADS] > 0:
             eyewitness_command += ' --threads {}'.format(
-                yaml_configuration[EYEWITNESS][THREADS]
+                yaml_configuration[VISUAL_IDENTIFICATION][THREADS]
             )
 
     logger.info(eyewitness_command)
@@ -747,6 +747,64 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
 
     if notification and notification[0].send_scan_status_notif:
         send_notification('reNgine has finished gathering screenshots for {}'.format(domain.name))
+    
+    if 'subdomain' in locals():
+        prevScanId = None
+        if ScanHistory.objects.filter(domain=domain).count() >= 2:
+            prevScanId = ScanHistory.objects.filter(domain=domain).all().order_by('-id')[1].id
+
+        currentScanId = task.id
+        logger.debug(prevScanId)
+        logger.debug(currentScanId)
+        
+        if not prevScanId:
+            return
+
+        prevScanDomains = Subdomain.objects.filter(
+                    scan_history__id=prevScanId).exclude(
+                    screenshot_path__isnull=True)
+        currentScanDomains = Subdomain.objects.filter(
+                    scan_history__id=currentScanId).exclude(
+                    screenshot_path__isnull=True)
+        newDomainsWithScreens = []
+
+        threshold = 50
+        if VISUAL_IDENTIFICATION in yaml_configuration \
+        and SCREENSHOT_COMPARISON_THRESHOLD in yaml_configuration[VISUAL_IDENTIFICATION] \
+        and yaml_configuration[VISUAL_IDENTIFICATION][SCREENSHOT_COMPARISON_THRESHOLD] > 0:
+            threshold = yaml_configuration[VISUAL_IDENTIFICATION][THREADS]
+
+        for d1 in currentScanDomains:
+            toAdd = False
+            found = False
+            for d2 in prevScanDomains:
+                if d1.name == d2.name:
+                    found = True
+                    toAdd = compareImages(d1.screenshot_path, d2.screenshot_path, threshold)
+            if not found:
+                toAdd = True
+            if toAdd:
+                newDomainsWithScreens.append(d1.name)
+        logger.debug(f"New domains have screenshots: {newDomainsWithScreens}")
+
+        notification = Notification.objects.all()
+        if newDomainsWithScreens and notification and notification[0].send_subdomain_changes_notif:
+            message = "**{} Subdomains have significant visual changes on {}**".format(len(newDomainsWithScreens), domain.name)
+            for subdomain in newDomainsWithScreens:
+                message += "\n• {}".format(subdomain)
+            send_notification(message)
+
+
+def compareImages(imgPath1, imgPath2, threshold=50):
+    idiffArgs = ["-failpercent", f"{threshold}", "-warnpercent", f"{threshold}", f"{imgPath1}", f"{imgPath2}"]
+    try:
+        stdout = subprocess.check_output(['idiff'] + idiffArgs).decode('utf-8')
+        logger.debug(stdout)
+        return stdout.split('\n')[-2] != "PASS"
+    except subprocess.CalledProcessError:
+        return True
+
+
 
 
 def port_scanning(task, domain, yaml_configuration, results_dir):
