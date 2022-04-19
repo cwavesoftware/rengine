@@ -13,4 +13,4 @@ echo $csrf
 
 
 echo "INFO: Creating target ..."
-curl -vv $1/target/add/target -b cookiejar --insecure -o /dev/null -d "csrfmiddlewaretoken=$csrf&name=$4&description=created%20via%20automation%20from%20Hackerone&h1_team_handle=$5&add-target=submit" --proxy http://localhost:8080
+curl -s $1/target/add/target -b cookiejar --insecure -o /dev/null -d "csrfmiddlewaretoken=$csrf&name=$4&description=created%20via%20automation%20from%20Hackerone&h1_team_handle=$5&add-target=submit"
