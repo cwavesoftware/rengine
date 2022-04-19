@@ -750,12 +750,13 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
     
     if 'subdomain' in locals():
         prevScanId = None
-        if ScanHistory.objects.filter(domain=domain).count() >= 2:
-            prevScanId = ScanHistory.objects.filter(domain=domain).all().order_by('-id')[1].id
+        q = ScanHistory.objects.filter(domain=domain).filter(scan_status=2)
+        if q.count() >= 1:
+            prevScanId = q.all().order_by('-id')[0].id
 
         currentScanId = task.id
-        logger.debug(prevScanId)
-        logger.debug(currentScanId)
+        logger.info(f"Comparing previous successfull scan {prevScanId}")
+        logger.info(f"With current scan {currentScanId}")
         
         if not prevScanId:
             return
