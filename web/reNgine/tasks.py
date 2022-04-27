@@ -510,9 +510,11 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
                 message = "**{} New Subdomains Discovered on domain {}**".format(newly_added_subdomain.count(), domain.name)
                 for subdomain in newly_added_subdomain:
                     message += "\n• {}".format(subdomain.name)
-                send_notification(message)
             else:
-                logger.info("New subdomains number exceeds notification threshold. Something is wrong, check the subdomain discovery tools")
+                message = f"New subdomains discovered on {domain.name} exceeds notification threshold. Something is wrong, check the subdomain discovery tools"
+                logger.info(message)
+            send_notification(message)
+            
 
         removed_subdomain = get_removed_subdomain(task.id, domain.id)
         if removed_subdomain:
@@ -520,9 +522,10 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
                 message = "**{} Subdomains are no longer available on domain {}**".format(removed_subdomain.count(), domain.name)
                 for subdomain in removed_subdomain:
                     message += "\n• {}".format(subdomain.name)
-                send_notification(message)
             else:
-                logger.info("Removed subdomains number exceeds notification threshold. Something is wrong, check the subdomain discovery tools")
+                message = f"Removed subdomains from {domain.name} exceeds notification threshold. Something is wrong, check the subdomain discovery tools"
+                logger.info(message)
+            send_notification(message)
 
     # check for interesting subdomains and send notif if any
     if notification and notification[0].send_interesting_notif:

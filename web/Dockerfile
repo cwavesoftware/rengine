@@ -94,7 +94,7 @@ RUN python3 -m pip install fuzzywuzzy \
     pyvirtualdisplay \
     netaddr
 
-RUN apt-get install -y openimageio-tools
+RUN apt install -y openimageio-tools
 
 # Copy source code
 COPY . /usr/src/app/
