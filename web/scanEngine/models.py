@@ -75,6 +75,7 @@ class Notification(models.Model):
     send_subdomain_changes_notif = models.BooleanField(default=True)
 
     send_scan_output_file = models.BooleanField(default=True)
+    notif_threshold = models.IntegerField(null=True, blank=True)
 
 
 class Proxy(models.Model):

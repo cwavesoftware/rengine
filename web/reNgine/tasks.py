@@ -465,7 +465,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
     '''
     Remove all the from_* files
     '''
-    os.system('rm -f {}/from*'.format(results_dir))
+    # os.system('rm -f {}/from*'.format(results_dir))
 
     '''
     Sort all Subdomains
@@ -473,7 +473,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
     os.system(
         'sort -u {0}/subdomain_collection.txt -o {0}/sorted_subdomain_collection.txt'.format(results_dir))
 
-    os.system('rm -f {}/subdomain_collection.txt'.format(results_dir))
+    # os.system('rm -f {}/subdomain_collection.txt'.format(results_dir))
 
     '''
     The final results will be stored in sorted_subdomain_collection.
@@ -501,18 +501,28 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
     # check for any subdomain changes and send notif if any
     if notification and notification[0].send_subdomain_changes_notif:
         newly_added_subdomain = get_new_added_subdomain(task.id, domain.id)
+        threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
+        # current_subdomains_count = Subdomain.objects.filter(scan_history=task.id).count()
+        last_scan_subdomains = get_last_scan_subdomains(task.id, domain.id)
+        last_scan_subdomains_count = last_scan_subdomains.count() if last_scan_subdomains else 0  # Will not send notif on the first subdomain scan
         if newly_added_subdomain:
-            message = "**{} New Subdomains Discovered on domain {}**".format(newly_added_subdomain.count(), domain.name)
-            for subdomain in newly_added_subdomain:
-                message += "\n• {}".format(subdomain.name)
-            send_notification(message)
+            if (newly_added_subdomain.count()) < (last_scan_subdomains_count * threshold) / 100:
+                message = "**{} New Subdomains Discovered on domain {}**".format(newly_added_subdomain.count(), domain.name)
+                for subdomain in newly_added_subdomain:
+                    message += "\n• {}".format(subdomain.name)
+                send_notification(message)
+            else:
+                logger.info("New subdomains number exceeds notification threshold. Something is wrong, check the subdomain discovery tools")
 
         removed_subdomain = get_removed_subdomain(task.id, domain.id)
         if removed_subdomain:
-            message = "**{} Subdomains are no longer available on domain {}**".format(removed_subdomain.count(), domain.name)
-            for subdomain in removed_subdomain:
-                message += "\n• {}".format(subdomain.name)
-            send_notification(message)
+            if (removed_subdomain.count()) < (last_scan_subdomains_count * threshold) / 100:
+                message = "**{} Subdomains are no longer available on domain {}**".format(removed_subdomain.count(), domain.name)
+                for subdomain in removed_subdomain:
+                    message += "\n• {}".format(subdomain.name)
+                send_notification(message)
+            else:
+                logger.info("Removed subdomains number exceeds notification threshold. Something is wrong, check the subdomain discovery tools")
 
     # check for interesting subdomains and send notif if any
     if notification and notification[0].send_interesting_notif:
@@ -523,6 +533,18 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
             for subdomain in interesting_subdomain:
                 message += "\n• {}".format(subdomain.name)
             send_notification(message)
+
+
+def get_last_scan_subdomains(scan_id, domain_id):
+    scan_history = ScanHistory.objects.filter(
+        domain=domain_id).filter(
+            subdomain_discovery=True).filter(
+                id__lte=scan_id)
+    if scan_history.count() > 1:
+        last_scan = scan_history.order_by('-start_scan_date')[1]
+        subdomains = Subdomain.objects.filter(
+            scan_history__id=last_scan.id)
+        return subdomains
 
 
 def get_new_added_subdomain(scan_id, domain_id):

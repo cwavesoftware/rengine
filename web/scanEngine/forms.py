@@ -310,6 +310,15 @@ class NotificationForm(forms.ModelForm):
                 "id": "send_subdomain_changes_notif",
             }))
 
+    notif_threshold = forms.IntegerField(
+        required=False,
+        widget=forms.NumberInput(
+            attrs={
+                "class": "custom-control custom-range",
+                "id": "notif_threshold"
+            }
+        )
+    )
 
     send_scan_output_file = forms.BooleanField(
         required=False,
@@ -345,6 +354,9 @@ class NotificationForm(forms.ModelForm):
             self.fields['telegram_bot_token'].widget.attrs['readonly'] = True
             self.fields['telegram_bot_chat_id'].widget.attrs['readonly'] = True
 
+        self.initial['notif_threshold'] = key.notif_threshold
+
+
 
     def set_initial(self):
         self.initial['send_to_slack'] = False
@@ -362,6 +374,8 @@ class NotificationForm(forms.ModelForm):
         self.initial['send_subdomain_changes_notif'] = True
 
         self.initial['send_scan_output_file'] = True
+        self.initial['notif_threshold'] = 0
+
 
 
 class ProxyForm(forms.ModelForm):
