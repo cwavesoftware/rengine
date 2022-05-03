@@ -775,7 +775,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
     
     if 'subdomain' in locals():
         prevScanId = None
-        q = ScanHistory.objects.filter(domain=domain).filter(scan_status=2)
+        q = ScanHistory.objects.filter(domain=domain).filter(scan_status=2).filter(screenshot=True)
         if q.count() >= 1:
             prevScanId = q.all().order_by('-id')[0].id
 
@@ -814,10 +814,16 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         logger.debug(f"New domains have screenshots: {newDomainsWithScreens}")
 
         notification = Notification.objects.all()
+        threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
+        
         if newDomainsWithScreens and notification and notification[0].send_subdomain_changes_notif:
-            message = "**{} Subdomains have significant visual changes on {}**".format(len(newDomainsWithScreens), domain.name)
-            for subdomain in newDomainsWithScreens:
-                message += "\n• {}".format(subdomain)
+            if len(newDomainsWithScreens) < (prevScanDomains.count() * threshold) / 100:
+                message = "**{} Subdomains have significant visual changes on {}**".format(len(newDomainsWithScreens), domain.name)
+                for subdomain in newDomainsWithScreens:
+                    message += "\n• {}".format(subdomain)
+            else:
+                message = f"Visual changes on {domain.name} exceeds notification threshold. Something is wrong, check the subdomain discovery tools or screenshot comparison tool"
+                logger.info(message)
             send_notification(message)
 
 
