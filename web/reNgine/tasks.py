@@ -500,13 +500,17 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
 
     # check for any subdomain changes and send notif if any
     if notification and notification[0].send_subdomain_changes_notif:
-        newly_added_subdomain = get_new_added_subdomain(task.id, domain.id)
+        compare_with_all_scans = COMPARE_WITH in yaml_configuration[SUBDOMAIN_DISCOVERY] and yaml_configuration[SUBDOMAIN_DISCOVERY][COMPARE_WITH] == "all_scans"
+        newly_added_subdomain = get_new_added_subdomain(task.id, domain.id, compare_with_all_scans)
         threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
-        # current_subdomains_count = Subdomain.objects.filter(scan_history=task.id).count()
-        last_scan_subdomains = get_last_scan_subdomains(task.id, domain.id)
-        last_scan_subdomains_count = last_scan_subdomains.count() if last_scan_subdomains else 0  # Will not send notif on the first subdomain scan
+        if compare_with_all_scans:
+            to_compare = Subdomain.objects.filter(target_domain=domain.id).distinct("name").count()
+        else:
+            last_scan_subdomains = get_last_scan_subdomains(task.id, domain.id)
+            to_compare = last_scan_subdomains.count() if last_scan_subdomains else 0  # Will not send notif on the first subdomain scan
+        logger.info(f"Threshold = {threshold}. Comparing with {to_compare} subdomains found")
         if newly_added_subdomain:
-            if (newly_added_subdomain.count()) < (last_scan_subdomains_count * threshold) / 100:
+            if (newly_added_subdomain.count()) < (to_compare * threshold) / 100:
                 message = "**{} New Subdomains Discovered on domain {}**".format(newly_added_subdomain.count(), domain.name)
                 for subdomain in newly_added_subdomain:
                     message += "\n• {}".format(subdomain.name)
@@ -514,11 +518,10 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
                 message = f"New subdomains discovered on {domain.name} exceeds notification threshold. Something is wrong, check the subdomain discovery tools"
                 logger.info(message)
             send_notification(message)
-            
 
-        removed_subdomain = get_removed_subdomain(task.id, domain.id)
+        removed_subdomain = get_removed_subdomain(task.id, domain.id, compare_with_all_scans)
         if removed_subdomain:
-            if (removed_subdomain.count()) < (last_scan_subdomains_count * threshold) / 100:
+            if (removed_subdomain.count()) < (to_compare * threshold) / 100:
                 message = "**{} Subdomains are no longer available on domain {}**".format(removed_subdomain.count(), domain.name)
                 for subdomain in removed_subdomain:
                     message += "\n• {}".format(subdomain.name)
@@ -550,7 +553,7 @@ def get_last_scan_subdomains(scan_id, domain_id):
         return subdomains
 
 
-def get_new_added_subdomain(scan_id, domain_id):
+def get_new_added_subdomain(scan_id, domain_id, compare_with_all_scans=True):
     scan_history = ScanHistory.objects.filter(
         domain=domain_id).filter(
             subdomain_discovery=True).filter(
@@ -559,15 +562,17 @@ def get_new_added_subdomain(scan_id, domain_id):
         last_scan = scan_history.order_by('-start_scan_date')[1]
         scanned_host_q1 = Subdomain.objects.filter(
             scan_history__id=scan_id).values('name')
-        scanned_host_q2 = Subdomain.objects.filter(
-            scan_history__id=last_scan.id).values('name')
+        if compare_with_all_scans:
+            scanned_host_q2 = Subdomain.objects.filter(target_domain__id=domain_id).values('name').distinct('name')
+        else:   
+            scanned_host_q2 = Subdomain.objects.filter(scan_history__id=last_scan.id).values('name')
         added_subdomain = scanned_host_q1.difference(scanned_host_q2)
 
         return Subdomain.objects.filter(
             scan_history=scan_id).filter(
                 name__in=added_subdomain)
 
-def get_removed_subdomain(scan_id, domain_id):
+def get_removed_subdomain(scan_id, domain_id, compare_with_all_scans=True):
     scan_history = ScanHistory.objects.filter(
         domain=domain_id).filter(
             subdomain_discovery=True).filter(
@@ -576,11 +581,11 @@ def get_removed_subdomain(scan_id, domain_id):
         last_scan = scan_history.order_by('-start_scan_date')[1]
         scanned_host_q1 = Subdomain.objects.filter(
             scan_history__id=scan_id).values('name')
-        scanned_host_q2 = Subdomain.objects.filter(
-            scan_history__id=last_scan.id).values('name')
+        if compare_with_all_scans:
+            scanned_host_q2 = Subdomain.objects.filter(target_domain__id=domain_id).values('name').distinct('name')
+        else:   
+            scanned_host_q2 = Subdomain.objects.filter(scan_history__id=last_scan.id).values('name')
         removed_subdomains = scanned_host_q2.difference(scanned_host_q1)
-
-        print()
 
         return Subdomain.objects.filter(
             scan_history=last_scan).filter(
