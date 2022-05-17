@@ -3,10 +3,13 @@ subdomain_discovery:
   threads: 10
   use_amass_config: false
   use_subfinder_config: false
+  compare_with: all_scans
 
 visual_identification:
   timeout: 10
   threads: 5
+  comparison_threshold: 70
+  delay: 2
 
 osint:
   discover: [ emails, metainfo, employees ]
