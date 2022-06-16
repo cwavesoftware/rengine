@@ -9,7 +9,7 @@ bash login.sh $1 $3 $4
 
 targets=""
 get_targets () {
-    targets=$(curl -s -b cookiejar "$1/api/queryTargetsWithoutOrganization/" --insecure)
+    targets=$(curl -s -b cookiejar "$1/api/queryTargets/" --insecure)
 }
 
 get_target_id () {
