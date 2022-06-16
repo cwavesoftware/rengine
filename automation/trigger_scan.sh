@@ -49,12 +49,15 @@ wait () {
 get_targets $1
 get_target_id $2
 echo "DEBUG: Target ID: $target_id"
-if ! [[ $target_id =~ '^\d+$' ]]; 
+if [[ $target_id == "" ]] || [ ! $target_id -eq $target_id ];
    then echo "ERROR: Could not get Target ID" >&2; exit 1 
 fi
 
 get_engine_id $1 "$5"
 echo "DEBUG: Engine ID: $engine_id"
+if [[ $engine_id == "" ]] || [ ! $engine_id -eq $engine_id ];
+   then echo "ERROR: Could not get Engine ID" >&2; exit 1 
+fi
 
 trigger $1 $target_id $engine_id $6
 
