@@ -83,6 +83,10 @@ urlpatterns = [
         ListEndpoints.as_view(),
         name='queryEndpoints'),
     path(
+        'queryTargets/',
+        ListTargets.as_view(),
+        name='queryTarget'),
+    path(
         'queryTargetsWithoutOrganization/',
         ListTargetsWithoutOrganization.as_view(),
         name='queryTargetsWithoutOrganization'),

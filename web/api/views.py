@@ -127,6 +127,11 @@ class ListOrganizations(APIView):
         organization_serializer = OrganizationSerializer(organizations, many=True)
         return Response({'organizations': organization_serializer.data})
 
+class ListTargets(APIView):
+    def get(self, request, format=None):
+        targets = Domain.objects.all()
+        targets_serializer = OrganizationTargetsSerializer(targets, many=True)
+        return Response({'domains': targets_serializer.data})
 
 class ListTargetsInOrganization(APIView):
     def get(self, request, format=None):
@@ -141,7 +146,6 @@ class ListTargetsInOrganization(APIView):
 
 class ListTargetsWithoutOrganization(APIView):
     def get(self, request, format=None):
-        req = self.request
         targets = Domain.objects.exclude(domains__in=Organization.objects.all())
         targets_serializer = OrganizationTargetsSerializer(targets, many=True)
         return Response({'domains': targets_serializer.data})

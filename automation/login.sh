@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ $# -lt 3 ]; then
+    echo "Usage: $0 <rengine_url> <rengine_username> <rengine_password>"
+    exit 1
+fi
+
 echo "INFO: Getting CSRF token ..."
 curl -s "$1/login/" -c cookiejar --insecure -o /dev/null && \
 csrf=$(cat cookiejar | grep csrftoken | rev | cut -d$'\t' -f1 | rev) && \

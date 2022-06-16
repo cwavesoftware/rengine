@@ -48,6 +48,10 @@ wait () {
 
 get_targets $1
 get_target_id $2
+re='^\d+$'
+if ! [[ $target_id =~ $re ]] ; then
+   echo "ERROR: Could not get Target ID" >&2; exit 1
+fi
 echo "DEBUG: Target ID: $target_id"
 
 get_engine_id $1 "$5"
