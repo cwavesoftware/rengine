@@ -499,7 +499,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
         send_files_to_discord(results_dir + '/sorted_subdomain_collection.txt')
 
     # check for any subdomain changes and send notif if any
-    if notification and notification[0].send_subdomain_changes_notif:
+    if notification and (notification[0].send_subdomain_changes_notif or notification[0].send_removed_subdomains_notif):
         compare_with_all_scans = COMPARE_WITH in yaml_configuration[SUBDOMAIN_DISCOVERY] and yaml_configuration[SUBDOMAIN_DISCOVERY][COMPARE_WITH] == "all_scans"
         newly_added_subdomain = get_new_added_subdomain(task.id, domain.id, compare_with_all_scans)
         threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
@@ -509,7 +509,8 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
             last_scan_subdomains = get_last_scan_subdomains(task.id, domain.id)
             to_compare = last_scan_subdomains.count() if last_scan_subdomains else 0  # Will not send notif on the first subdomain scan
         logger.info(f"Threshold = {threshold}. Comparing with {to_compare} subdomains found")
-        if newly_added_subdomain:
+
+        if newly_added_subdomain and notification[0].send_subdomain_changes_notif:
             if (newly_added_subdomain.count()) < (to_compare * threshold) / 100:
                 message = "**{} New Subdomains Discovered on domain {}**".format(newly_added_subdomain.count(), domain.name)
                 for subdomain in newly_added_subdomain:
@@ -520,7 +521,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
             send_notification(message)
 
         removed_subdomain = get_removed_subdomain(task.id, domain.id, compare_with_all_scans)
-        if removed_subdomain:
+        if removed_subdomain and notification[0].send_removed_subdomains_notif:
             if (removed_subdomain.count()) < (to_compare * threshold) / 100:
                 message = "**{} Subdomains are no longer available on domain {}**".format(removed_subdomain.count(), domain.name)
                 for subdomain in removed_subdomain:
@@ -745,6 +746,13 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                 yaml_configuration[VISUAL_IDENTIFICATION][THREADS]
             )
 
+    if VISUAL_IDENTIFICATION in yaml_configuration \
+        and DELAY in yaml_configuration[VISUAL_IDENTIFICATION] \
+        and yaml_configuration[VISUAL_IDENTIFICATION][DELAY] > 0:
+            eyewitness_command += ' --delay {}'.format(
+                yaml_configuration[VISUAL_IDENTIFICATION][DELAY]
+            )
+
     logger.info(eyewitness_command)
 
     os.system(eyewitness_command)
@@ -779,21 +787,11 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         send_notification('reNgine has finished gathering screenshots for {}'.format(domain.name))
     
     if 'subdomain' in locals():
-        prevScanId = None
-        q = ScanHistory.objects.filter(domain=domain).filter(scan_status=2).filter(screenshot=True)
-        if q.count() >= 1:
-            prevScanId = q.all().order_by('-id')[0].id
-
         currentScanId = task.id
-        logger.info(f"Comparing previous successfull scan {prevScanId}")
-        logger.info(f"With current scan {currentScanId}")
+        logger.info(f"Comparing current scan's screenshots with the last screenshot found in any previous scan")
         
-        if not prevScanId:
-            return
-
-        prevScanDomains = Subdomain.objects.filter(
-                    scan_history__id=prevScanId).exclude(
-                    screenshot_path__isnull=True)
+        prevDomainsWithScreens = Subdomain.objects.exclude(scan_history__id=currentScanId).exclude(
+                    screenshot_path__isnull=True).order_by('-id')
         currentScanDomains = Subdomain.objects.filter(
                     scan_history__id=currentScanId).exclude(
                     screenshot_path__isnull=True)
@@ -803,26 +801,23 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         if VISUAL_IDENTIFICATION in yaml_configuration \
         and SCREENSHOT_COMPARISON_THRESHOLD in yaml_configuration[VISUAL_IDENTIFICATION] \
         and yaml_configuration[VISUAL_IDENTIFICATION][SCREENSHOT_COMPARISON_THRESHOLD] > 0:
-            threshold = yaml_configuration[VISUAL_IDENTIFICATION][THREADS]
+            threshold = yaml_configuration[VISUAL_IDENTIFICATION][SCREENSHOT_COMPARISON_THRESHOLD]
 
         for d1 in currentScanDomains:
             toAdd = False
-            found = False
-            for d2 in prevScanDomains:
+            for d2 in prevDomainsWithScreens:
                 if d1.name == d2.name:
-                    found = True
                     toAdd = compareImages(d1.screenshot_path, d2.screenshot_path, threshold)
-            if not found:
-                toAdd = True
+                    break
             if toAdd:
                 newDomainsWithScreens.append(d1.name)
         logger.debug(f"New domains have screenshots: {newDomainsWithScreens}")
 
         notification = Notification.objects.all()
-        threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
+        # threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
         
-        if newDomainsWithScreens and notification and notification[0].send_subdomain_changes_notif:
-            if len(newDomainsWithScreens) < (prevScanDomains.count() * threshold) / 100:
+        if newDomainsWithScreens and notification and notification[0].send_visual_changes_notif:
+            if True:  # len(newDomainsWithScreens) < (prevDomainsWithScreens.count() * threshold) / 100:
                 message = "**{} Subdomains have significant visual changes on {}**".format(len(newDomainsWithScreens), domain.name)
                 for subdomain in newDomainsWithScreens:
                     message += "\n• {}".format(subdomain)
@@ -834,9 +829,10 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
 
 def compareImages(imgPath1, imgPath2, threshold=50):
     idiffArgs = ["-failpercent", f"{threshold}", "-warnpercent", f"{threshold}", f"{imgPath1}", f"{imgPath2}"]
+    logger.info(f"idiff {' '.join(idiffArgs)}")
     try:
         stdout = subprocess.check_output(['idiff'] + idiffArgs).decode('utf-8')
-        logger.debug(stdout)
+        logger.info(stdout)
         return stdout.split('\n')[-2] != "PASS"
     except subprocess.CalledProcessError:
         return True
