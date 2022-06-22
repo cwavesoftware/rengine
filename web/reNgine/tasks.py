@@ -814,10 +814,10 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         logger.debug(f"New domains have screenshots: {newDomainsWithScreens}")
 
         notification = Notification.objects.all()
-        # threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
+        threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
         
         if newDomainsWithScreens and notification and notification[0].send_visual_changes_notif:
-            if True:  # len(newDomainsWithScreens) < (prevDomainsWithScreens.count() * threshold) / 100:
+            if len(newDomainsWithScreens) < (prevDomainsWithScreens.count() * threshold) / 100:
                 message = "**{} Subdomains have significant visual changes on {}**".format(len(newDomainsWithScreens), domain.name)
                 for subdomain in newDomainsWithScreens:
                     message += "\n• {}".format(subdomain)
