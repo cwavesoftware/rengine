@@ -187,7 +187,7 @@ LOGGING = {
     },
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {ip} {process:d} {thread:d} {message}',
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
             'style': '{',
         },
         'simple': {
