@@ -338,12 +338,6 @@ def notification_settings(request):
         if form.is_valid():
             form.save()
             send_slack_message('*reNgine*\nCongratulations! your notification services are working.')
-            with open("/usr/src/app/static/visual_changes_notif_slack_template.txt", "r") as fin:
-                template = fin.read()
-                logger.debug(template)
-                logger.debug(json.dumps(template))
-                send_slack_message(template, raw=False)
-                send_slack_message(template, raw=True)
             send_telegram_message('*reNgine*\nCongratulations! your notification services are working.')
             send_discord_message('**reNgine**\nCongratulations! your notification services are working.')
             messages.add_message(
