@@ -343,6 +343,14 @@ class NotificationForm(forms.ModelForm):
                 "id": "send_scan_output_file",
             }))
 
+    send_visual_changes_to_slack = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "custom-control-input",
+                "id": "send_visual_changes_to_slack",
+            }))
+
 
     def set_value(self, key):
         self.initial['send_to_slack'] = key.send_to_slack
@@ -372,6 +380,8 @@ class NotificationForm(forms.ModelForm):
         self.initial['notif_threshold'] = key.notif_threshold
         self.initial['send_removed_subdomains_notif'] = key.send_removed_subdomains_notif
         self.initial['send_visual_changes_notif'] = key.send_visual_changes_notif
+        self.initial['send_visual_changes_to_slack'] = key.send_visual_changes_to_slack
+
 
 
     def set_initial(self):
@@ -393,6 +403,7 @@ class NotificationForm(forms.ModelForm):
         self.initial['notif_threshold'] = 0
         self.initial['send_removed_subdomains_notif'] = False
         self.initial['send_visual_changes_notif'] = False
+        self.initial['send_visual_changes_to_slack'] = False
 
 
 class ProxyForm(forms.ModelForm):

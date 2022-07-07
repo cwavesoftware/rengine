@@ -150,9 +150,10 @@ def send_telegram_message(message):
         thread = Thread(target=requests.get, args = (send_text, ))
         thread.start()
 
-def send_slack_message(message):
+def send_slack_message(message, raw=False):
     headers = {'content-type': 'application/json'}
-    message = {'text': message}
+    if not raw:
+        message = json.dumps({'text': message})
     notification = Notification.objects.all()
     if notification and notification[0].send_to_slack \
     and notification[0].slack_hook_url:
@@ -161,7 +162,7 @@ def send_slack_message(message):
             target=requests.post,
             kwargs = {
                 'url': hook_url,
-                'data': json.dumps(message),
+                'data': message,
                 'headers': headers,
             })
         thread.start()

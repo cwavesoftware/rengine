@@ -78,6 +78,7 @@ class Notification(models.Model):
 
     send_scan_output_file = models.BooleanField(default=True)
     notif_threshold = models.IntegerField(null=True, blank=True)
+    send_visual_changes_to_slack = models.BooleanField(default=False)
 
 
 class Proxy(models.Model):
