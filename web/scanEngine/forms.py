@@ -319,6 +319,21 @@ class NotificationForm(forms.ModelForm):
             }
         )
     )
+    send_removed_subdomains_notif = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "custom-control-input",
+                "id": "send_removed_subdomains_notif",
+            }))
+
+    send_visual_changes_notif = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "custom-control-input",
+                "id": "send_visual_changes_notif",
+            }))
 
     send_scan_output_file = forms.BooleanField(
         required=False,
@@ -326,6 +341,14 @@ class NotificationForm(forms.ModelForm):
             attrs={
                 "class": "custom-control-input",
                 "id": "send_scan_output_file",
+            }))
+
+    send_visual_changes_to_slack = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "custom-control-input",
+                "id": "send_visual_changes_to_slack",
             }))
 
 
@@ -355,6 +378,9 @@ class NotificationForm(forms.ModelForm):
             self.fields['telegram_bot_chat_id'].widget.attrs['readonly'] = True
 
         self.initial['notif_threshold'] = key.notif_threshold
+        self.initial['send_removed_subdomains_notif'] = key.send_removed_subdomains_notif
+        self.initial['send_visual_changes_notif'] = key.send_visual_changes_notif
+        self.initial['send_visual_changes_to_slack'] = key.send_visual_changes_to_slack
 
 
 
@@ -375,7 +401,9 @@ class NotificationForm(forms.ModelForm):
 
         self.initial['send_scan_output_file'] = True
         self.initial['notif_threshold'] = 0
-
+        self.initial['send_removed_subdomains_notif'] = False
+        self.initial['send_visual_changes_notif'] = False
+        self.initial['send_visual_changes_to_slack'] = False
 
 
 class ProxyForm(forms.ModelForm):

@@ -133,10 +133,46 @@ reNgine Settings
               <div class="custom-control custom-checkbox checkbox-info">
                 {{form.send_subdomain_changes_notif}}
                 <label class="custom-control-label text-dark" for="send_subdomain_changes_notif">
-                  Subdomain Changes
+                  New Subdomains
                   <br>
                   <span class="text-muted">
-                    (e.g. when new Subdomains are discovered or subdomains are no longer available)
+                    (when new Subdomains are discovered)
+                  </span>
+                </label>
+              </div>
+            </div>
+            <div class="form-check pl-0 mt-1">
+              <div class="custom-control custom-checkbox checkbox-info">
+                {{form.send_removed_subdomains_notif}}
+                <label class="custom-control-label text-dark" for="send_removed_subdomains_notif">
+                  Removed Subdomains
+                  <br>
+                  <span class="text-muted">
+                    (when subdomains are no longer available)
+                  </span>
+                </label>
+              </div>
+            </div>
+            <div class="form-check pl-0 mt-1">
+              <div class="custom-control custom-checkbox checkbox-info">
+                {{form.send_visual_changes_notif}}
+                <label class="custom-control-label text-dark" for="send_visual_changes_notif">
+                  Visual changes
+                  <br>
+                  <span class="text-muted">
+                    (when significant visual changes are detected. Screenshots must be enabled in the scan engine configuration)
+                  </span>
+                </label>
+              </div>
+            </div>
+            <div class="form-check pl-0 mt-1">
+              <div class="custom-control custom-checkbox checkbox-info">
+                {{form.send_visual_changes_to_slack}}
+                <label class="custom-control-label text-dark" for="send_visual_changes_to_slack">
+                  Visual changes preview
+                  <br>
+                  <span class="text-info">
+                    Only Slack is supported!
                   </span>
                 </label>
               </div>

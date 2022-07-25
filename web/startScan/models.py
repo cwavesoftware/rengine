@@ -138,6 +138,7 @@ class Subdomain(models.Model):
     page_title = models.CharField(max_length=1000, blank=True, null=True)
     technologies = models.ManyToManyField('Technology', related_name='technologies')
     ip_addresses = models.ManyToManyField('IPAddress', related_name='ip_addresses')
+    screenshot_public_url = models.CharField(max_length=1000, null=True, blank=True)
 
     def __str__(self):
         return str(self.name)

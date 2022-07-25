@@ -1,5 +1,7 @@
+from distutils.log import info
 import os
 import traceback
+import slack
 import yaml
 import json
 import csv
@@ -42,6 +44,7 @@ from targetApp.models import Domain
 from scanEngine.models import EngineType, Configuration, Wordlist
 
 from .common_func import *
+from .slack import *
 
 '''
 task for background scan
@@ -499,7 +502,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
         send_files_to_discord(results_dir + '/sorted_subdomain_collection.txt')
 
     # check for any subdomain changes and send notif if any
-    if notification and notification[0].send_subdomain_changes_notif:
+    if notification and (notification[0].send_subdomain_changes_notif or notification[0].send_removed_subdomains_notif):
         compare_with_all_scans = COMPARE_WITH in yaml_configuration[SUBDOMAIN_DISCOVERY] and yaml_configuration[SUBDOMAIN_DISCOVERY][COMPARE_WITH] == "all_scans"
         newly_added_subdomain = get_new_added_subdomain(task.id, domain.id, compare_with_all_scans)
         threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
@@ -509,7 +512,8 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
             last_scan_subdomains = get_last_scan_subdomains(task.id, domain.id)
             to_compare = last_scan_subdomains.count() if last_scan_subdomains else 0  # Will not send notif on the first subdomain scan
         logger.info(f"Threshold = {threshold}. Comparing with {to_compare} subdomains found")
-        if newly_added_subdomain:
+
+        if newly_added_subdomain and notification[0].send_subdomain_changes_notif:
             if (newly_added_subdomain.count()) < (to_compare * threshold) / 100:
                 message = "**{} New Subdomains Discovered on domain {}**".format(newly_added_subdomain.count(), domain.name)
                 for subdomain in newly_added_subdomain:
@@ -520,7 +524,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
             send_notification(message)
 
         removed_subdomain = get_removed_subdomain(task.id, domain.id, compare_with_all_scans)
-        if removed_subdomain:
+        if removed_subdomain and notification[0].send_removed_subdomains_notif:
             if (removed_subdomain.count()) < (to_compare * threshold) / 100:
                 message = "**{} Subdomains are no longer available on domain {}**".format(removed_subdomain.count(), domain.name)
                 for subdomain in removed_subdomain:
@@ -745,6 +749,13 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                 yaml_configuration[VISUAL_IDENTIFICATION][THREADS]
             )
 
+    if VISUAL_IDENTIFICATION in yaml_configuration \
+        and DELAY in yaml_configuration[VISUAL_IDENTIFICATION] \
+        and yaml_configuration[VISUAL_IDENTIFICATION][DELAY] > 0:
+            eyewitness_command += ' --delay {}'.format(
+                yaml_configuration[VISUAL_IDENTIFICATION][DELAY]
+            )
+
     logger.info(eyewitness_command)
 
     os.system(eyewitness_command)
@@ -779,21 +790,11 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         send_notification('reNgine has finished gathering screenshots for {}'.format(domain.name))
     
     if 'subdomain' in locals():
-        prevScanId = None
-        q = ScanHistory.objects.filter(domain=domain).filter(scan_status=2).filter(screenshot=True)
-        if q.count() >= 1:
-            prevScanId = q.all().order_by('-id')[0].id
-
         currentScanId = task.id
-        logger.info(f"Comparing previous successfull scan {prevScanId}")
-        logger.info(f"With current scan {currentScanId}")
+        logger.info(f"Comparing current scan's screenshots with the last screenshot found in any previous scan")
         
-        if not prevScanId:
-            return
-
-        prevScanDomains = Subdomain.objects.filter(
-                    scan_history__id=prevScanId).exclude(
-                    screenshot_path__isnull=True)
+        prevDomainsWithScreens = Subdomain.objects.exclude(scan_history__id=currentScanId).exclude(
+                    screenshot_path__isnull=True).order_by('-id')
         currentScanDomains = Subdomain.objects.filter(
                     scan_history__id=currentScanId).exclude(
                     screenshot_path__isnull=True)
@@ -803,40 +804,107 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         if VISUAL_IDENTIFICATION in yaml_configuration \
         and SCREENSHOT_COMPARISON_THRESHOLD in yaml_configuration[VISUAL_IDENTIFICATION] \
         and yaml_configuration[VISUAL_IDENTIFICATION][SCREENSHOT_COMPARISON_THRESHOLD] > 0:
-            threshold = yaml_configuration[VISUAL_IDENTIFICATION][THREADS]
+            threshold = yaml_configuration[VISUAL_IDENTIFICATION][SCREENSHOT_COMPARISON_THRESHOLD]
+
+        notification = Notification.objects.all()
+        if notification[0].send_visual_changes_to_slack:
+            existingFiles = getFiles()
 
         for d1 in currentScanDomains:
             toAdd = False
-            found = False
-            for d2 in prevScanDomains:
+            for d2 in prevDomainsWithScreens:
                 if d1.name == d2.name:
-                    found = True
                     toAdd = compareImages(d1.screenshot_path, d2.screenshot_path, threshold)
-            if not found:
-                toAdd = True
+                    break
             if toAdd:
-                newDomainsWithScreens.append(d1.name)
-        logger.debug(f"New domains have screenshots: {newDomainsWithScreens}")
+                if notification[0].send_visual_changes_to_slack:
+                    if not d1.screenshot_public_url or d1.screenshot_public_url == '':
+                        fpath = os.path.join(
+                                    '/usr/src/scan_results',
+                                    d1.screenshot_path
+                                )
+                        fname = d1.screenshot_path.split('/')[0] + '_' + d1.screenshot_path.split('/')[-1]
+                        current_img = uploadAndPublish(fpath, fname, existingFiles)
+                        if not current_img:
+                            logger.error(f'Could not uploadAndPublish for subdomain id {d1.id}')
+                        if current_img:
+                            d1.screenshot_public_url = current_img
+                            d1.save()
+                            logger.info(f'screenshot_public_url for subdomain id {d1.id} updated in the database')
 
-        notification = Notification.objects.all()
+                    if not d2.screenshot_public_url or d2.screenshot_public_url == '':
+                        fpath = os.path.join(
+                                    '/usr/src/scan_results',
+                                    d2.screenshot_path
+                                )
+                        fname = d2.screenshot_path.split('/')[0] + '_' + d2.screenshot_path.split('/')[-1]
+                        prev_img = uploadAndPublish(fpath, fname, existingFiles)
+                        if not prev_img:
+                            logger.error('Could not uploadAndPublish for subdomain id {d2.id}')
+                        if prev_img:
+                            d2.screenshot_public_url = prev_img
+                            d2.save()
+                            logger.info(f'screenshot_public_url for subdomain id {d2.id} updated in the database')
+
+
+                newDomainsWithScreens.append(
+                    {"current":{"subdomain":d1.name, "date":d1.discovered_date, "img": d1.screenshot_public_url},
+                    "prev":{"subdomain":d2.name, "date":d2.discovered_date,  "img": d2.screenshot_public_url}})
+
+        logger.debug(f"New domains have screenshots: {newDomainsWithScreens}")
+        
         threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
         
-        if newDomainsWithScreens and notification and notification[0].send_subdomain_changes_notif:
-            if len(newDomainsWithScreens) < (prevScanDomains.count() * threshold) / 100:
-                message = "**{} Subdomains have significant visual changes on {}**".format(len(newDomainsWithScreens), domain.name)
-                for subdomain in newDomainsWithScreens:
-                    message += "\n• {}".format(subdomain)
+        if newDomainsWithScreens and notification and notification[0].send_visual_changes_notif:
+            if len(newDomainsWithScreens) < (prevDomainsWithScreens.count() * threshold) / 100:
+                header = "**{} Subdomains have significant visual changes on {}**".format(len(newDomainsWithScreens), domain.name)
+                message = ""
+                messages_with_img = []                
+
+                if notification[0].send_visual_changes_to_slack:
+                    message = header
+                    send_notification(message)
+
+                    try:
+                        with open("/usr/src/app/static/visual_changes_notif_slack_template.txt", "r") as fin:
+                            template = fin.read()
+                            logger.debug(template)
+                    except Exception as ex:
+                        logger.error("Could not read visual_changes_notif_slack_template.txt")
+                        logger.debug(ex)
+                        return
+
+                    for subdomain_dict in newDomainsWithScreens:
+                        if template:
+                            template = template.replace("<subdomain>",subdomain_dict["current"]["subdomain"])
+                            template = template.replace("<date1>",subdomain_dict["current"]["date"].strftime("%d.%m.%Y, %H:%M:%S"))
+                            template = template.replace("<date2>",subdomain_dict["prev"]["date"].strftime("%d.%m.%Y, %H:%M:%S"))
+                            template = template.replace("<curr_img_url>", subdomain_dict["current"]["img"])      
+                            template = template.replace("<prev_img_url>", subdomain_dict["prev"]["img"])
+                            messages_with_img.append(template)
+                        else:
+                            break
+
+                    for slack_msg in messages_with_img:
+                        send_slack_message(slack_msg, raw=True)
+                else:
+                    for subdomain_dict in newDomainsWithScreens:
+                        message += "\n• {}".format(subdomain)
+                    message = header + message
+                    send_notification(message)
+
             else:
                 message = f"Visual changes on {domain.name} exceeds notification threshold. Something is wrong, check the subdomain discovery tools or screenshot comparison tool"
                 logger.info(message)
-            send_notification(message)
+                send_notification(message)
 
 
 def compareImages(imgPath1, imgPath2, threshold=50):
     idiffArgs = ["-failpercent", f"{threshold}", "-warnpercent", f"{threshold}", f"{imgPath1}", f"{imgPath2}"]
+    logger.info(f"idiff {' '.join(idiffArgs)}")
     try:
         stdout = subprocess.check_output(['idiff'] + idiffArgs).decode('utf-8')
-        logger.debug(stdout)
+        logger.info(stdout)
         return stdout.split('\n')[-2] != "PASS"
     except subprocess.CalledProcessError:
         return True

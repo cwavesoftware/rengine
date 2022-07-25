@@ -45,6 +45,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_PORT=${POSTGRES_PORT}
       - POSTGRES_HOST=${POSTGRES_HOST}
+      - SLACK_USER=${SLACK_USER?SLACK_USER_NOT_DEFINED}
+      - SLACK_TOKEN=${SLACK_TOKEN?SLACK_TOKEN_NOT_DEFINED}
     depends_on:
       - db
       - redis
@@ -66,6 +68,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_PORT=${POSTGRES_PORT}
       - POSTGRES_HOST=${POSTGRES_HOST}
+      - SLACK_USER=${SLACK_USER?SLACK_USER_NOT_DEFINED}
+      - SLACK_TOKEN=${SLACK_TOKEN?SLACK_TOKEN_NOT_DEFINED}
     volumes:
       - ./web:/usr/src/app
       - github_repos:/usr/src/github
@@ -92,6 +96,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_PORT=${POSTGRES_PORT}
       - POSTGRES_HOST=${POSTGRES_HOST}
+      - SLACK_USER=${SLACK_USER?SLACK_USER_NOT_DEFINED}
+      - SLACK_TOKEN=${SLACK_TOKEN?SLACK_TOKEN_NOT_DEFINED}
     volumes:
       - ./web:/usr/src/app
       - github_repos:/usr/src/github
@@ -109,13 +115,13 @@ services:
     networks:
       - rengine_network
 
-  tor:
-    image: peterdavehello/tor-socks-proxy
-    restart: always
-    networks:
-      - rengine_network
-    depends_on:
-      - web
+  # tor:
+  #   image: peterdavehello/tor-socks-proxy
+  #   restart: always
+  #   networks:
+  #     - rengine_network
+  #   depends_on:
+  #     - web
 
 networks:
   rengine_network:

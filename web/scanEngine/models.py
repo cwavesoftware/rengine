@@ -73,9 +73,12 @@ class Notification(models.Model):
     send_interesting_notif = models.BooleanField(default=True)
     send_vuln_notif = models.BooleanField(default=True)
     send_subdomain_changes_notif = models.BooleanField(default=True)
+    send_removed_subdomains_notif = models.BooleanField(default=False)
+    send_visual_changes_notif = models.BooleanField(default=True)
 
     send_scan_output_file = models.BooleanField(default=True)
     notif_threshold = models.IntegerField(null=True, blank=True)
+    send_visual_changes_to_slack = models.BooleanField(default=False)
 
 
 class Proxy(models.Model):

@@ -1,0 +1,22 @@
+{
+	"blocks": [
+		{
+			"type": "image",
+			"title": {
+				"type": "plain_text",
+				"text": "<subdomain> on <date1>"
+			},
+			"image_url": "<curr_img_url>",
+            "alt_text": ""
+		},
+		{
+			"type": "image",
+			"title": {
+				"type": "plain_text",
+				"text": "<subdomain> on <date2>"
+			},
+			"image_url": "<prev_img_url>",
+            "alt_text": ""
+		}
+	]
+}
