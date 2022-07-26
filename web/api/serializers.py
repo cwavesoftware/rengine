@@ -600,6 +600,13 @@ class SubdomainSerializer(serializers.ModelSerializer):
         return len(subdomain.get_todos)
 
 
+class OnlyScreenshotsSubdomainSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Subdomain
+        fields = ['name', 'screenshot_path', 'http_status']
+
+
 class EndpointSerializer(serializers.ModelSerializer):
 
     technologies = TechnologySerializer(many=True)
