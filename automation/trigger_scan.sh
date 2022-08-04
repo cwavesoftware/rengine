@@ -5,7 +5,7 @@ if [ $# -lt 6 ]; then
     exit 1
 fi
 
-bash login.sh $1 $3 $4
+bash login.sh $1 $3 $4L
 
 targets=""
 get_targets () {
@@ -34,8 +34,9 @@ trigger () {
 }
 
 wait () {
-    last_scan_id=$(curl -k -b cookiejar -s $1/api/listScanHistory/ | jq '.scan_histories[] | .id'  | head -n 1)
-    echo "Scan ID = $last_scan_id"
+    last_scan_id=$(curl -k -b cookiejar -s $1/api/listScanHistory/ | jq '.scan_histories[0].id')
+    last_scan_celery_id=$(curl -k -b cookiejar -s $1/api/listScanHistory/ | jq '.scan_histories[0].celery_id')
+    echo "Scan ID = $last_scan_id, Celery ID = $last_scan_celery_id"
     scan_status=-1
     sleepTime=60  # seconds
     while [ ! $scan_status -eq 2 ]

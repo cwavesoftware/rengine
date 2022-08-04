@@ -31,7 +31,6 @@ from celery import shared_task
 from datetime import datetime
 from degoogle import degoogle
 
-from django.conf import settings
 from django.utils import timezone, dateformat
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
@@ -45,11 +44,15 @@ from scanEngine.models import EngineType, Configuration, Wordlist
 
 from .common_func import *
 from .slack import *
+from celery.utils.log import get_task_logger
 
 '''
 task for background scan
 '''
 
+logger = get_task_logger(__name__)
+if settings.DEBUG:
+    logger.setLevel(logging.DEBUG)
 
 @app.task
 def initiate_scan(
@@ -306,9 +309,10 @@ def skip_subdomain_scan(task, domain, results_dir):
         'cat {0}/target_domain.txt > {0}/subdomain_collection.txt'.format(results_dir))
 
     os.system(
-        'cat {0}/from_imported.txt > {0}/subdomain_collection.txt'.format(results_dir))
+        '[ -f {0}/from_imported.txt ] && cat {0}/from_imported.txt > {0}/subdomain_collection.txt'.format(results_dir))
 
-    os.system('rm -f {}/from_imported.txt'.format(results_dir))
+    os.system(
+        '[ -f {0}/from_imported.txt ] && rm -f {0}/from_imported.txt'.format(results_dir))
 
     '''
     Sort all Subdomains
@@ -363,7 +367,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
         tools = ' '.join(
             str(tool) for tool in yaml_configuration[SUBDOMAIN_DISCOVERY][USES_TOOLS])
 
-    logging.info(tools)
+    logger.info(f'Subdomain discovery tools to be run: {tools}')
 
     # check for THREADS, by default 10
     threads = 10
@@ -380,7 +384,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
             if USE_AMASS_CONFIG in yaml_configuration[SUBDOMAIN_DISCOVERY] and yaml_configuration[SUBDOMAIN_DISCOVERY][USE_AMASS_CONFIG]:
                 amass_command += ' -config /root/.config/amass.ini'
             # Run Amass Passive
-            logging.info(amass_command)
+            logger.info(amass_command)
             os.system(amass_command)
 
         if 'amass-active' in tools:
@@ -403,7 +407,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
 
 
             # Run Amass Active
-            logging.info(amass_command)
+            logger.info(amass_command)
             os.system(amass_command)
 
     if 'assetfinder' in tools:
@@ -411,7 +415,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
             domain.name, results_dir)
 
         # Run Assetfinder
-        logging.info(assetfinder_command)
+        logger.info(assetfinder_command)
         os.system(assetfinder_command)
 
     if 'sublist3r' in tools:
@@ -419,7 +423,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
             domain.name, threads, results_dir)
 
         # Run sublist3r
-        logging.info(sublist3r_command)
+        logger.info(sublist3r_command)
         os.system(sublist3r_command)
 
     if 'subfinder' in tools:
@@ -430,7 +434,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
             subfinder_command += ' -config /root/.config/subfinder/config.yaml'
 
         # Run Subfinder
-        logging.info(subfinder_command)
+        logger.info(subfinder_command)
         os.system(subfinder_command)
 
     if 'oneforall' in tools:
@@ -438,7 +442,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
             domain.name, results_dir)
 
         # Run OneForAll
-        logging.info(oneforall_command)
+        logger.info(oneforall_command)
         os.system(oneforall_command)
 
         extract_subdomain = "cut -d',' -f6 /usr/src/github/OneForAll/results/{}.csv >> {}/from_oneforall.txt".format(
@@ -706,7 +710,7 @@ def http_crawler(task, domain, results_dir, activity_id):
                 subdomain.save()
                 endpoint.save()
             except Exception as exception:
-                logging.error(exception)
+                logger.error(exception)
     alive_file.close()
 
     if notification and notification[0].send_scan_status_notif:
@@ -779,9 +783,9 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                     subdomain.save()
 
     # remove all db, html extra files in screenshot results
-    os.system('rm -rf {0}/*.csv {0}/*.db {0}/*.js {0}/*.html {0}/*.css'.format(
-        output_screenshots_path,
-    ))
+    # os.system('rm -rf {0}/*.csv {0}/*.db {0}/*.js {0}/*.html {0}/*.css'.format(
+    #     output_screenshots_path,
+    # ))
     os.system('rm -rf {0}/source'.format(
         output_screenshots_path,
     ))
@@ -807,7 +811,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
             threshold = yaml_configuration[VISUAL_IDENTIFICATION][SCREENSHOT_COMPARISON_THRESHOLD]
 
         notification = Notification.objects.all()
-        if notification[0].send_visual_changes_to_slack:
+        if notification and notification[0].send_visual_changes_to_slack:
             existingFiles = getFiles()
 
         for d1 in currentScanDomains:
@@ -998,7 +1002,7 @@ def port_scanning(task, domain, yaml_configuration, results_dir):
                 
             subdomain.ip_addresses.add(ip)
     except BaseException as exception:
-        logging.error(exception)
+        logger.error(exception)
         update_last_activity(activity_id, 0)
 
     if notification and notification[0].send_scan_status_notif:
@@ -1105,7 +1109,7 @@ def directory_brute(task, domain, yaml_configuration, results_dir, activity_id):
                     subdomain.directory_json = json_string
                     subdomain.save()
         except Exception as exception:
-            logging.error(exception)
+            logger.error(exception)
             update_last_activity(activity_id, 0)
 
     if notification and notification[0].send_scan_status_notif:
@@ -1297,7 +1301,7 @@ def fetch_endpoints(
                     subdomain.technologies.add(tech)
                     subdomain.save()
     except Exception as exception:
-        logging.error(exception)
+        logger.error(exception)
         update_last_activity(activity_id, 0)
 
     if notification and notification[0].send_scan_status_notif:
@@ -1552,7 +1556,7 @@ def vulnerability_scan(
                         continue
 
         except Exception as exception:
-            logging.error(exception)
+            logger.error(exception)
             update_last_activity(activity_id, 0)
 
     if notification and notification[0].send_scan_status_notif:

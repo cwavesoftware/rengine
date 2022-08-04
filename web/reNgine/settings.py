@@ -131,7 +131,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Bucharest'
 
 USE_I18N = True
 
@@ -168,7 +168,7 @@ CELERY settings
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
 CELERY_ENABLE_UTC = False
-CELERY_TIMEZONE = 'UTC'
+CELERY_TIMEZONE = 'Europe/Bucharest'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -187,7 +187,7 @@ LOGGING = {
     },
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'format': '[{asctime}: {levelname}/{name} {module}.py] {message}',
             'style': '{',
         },
         'simple': {

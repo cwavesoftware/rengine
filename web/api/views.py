@@ -21,7 +21,6 @@ from recon_note.models import *
 from reNgine.common_func import is_safe_path
 from django import http
 from django.shortcuts import get_object_or_404
-from reNgine.definitions import logger
 
 
 class VulnerabilityReport(APIView):
@@ -446,7 +445,6 @@ class SubdomainsViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         req = self.request
         scan_id = req.query_params.get('scan_id')
-        logger.info(self.request.query_params)
         if scan_id:
             if 'only_screenshot' in self.request.query_params:
                 return Subdomain.objects.filter(

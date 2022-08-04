@@ -20,6 +20,7 @@ from reNgine.tasks import initiate_scan, create_scan_activity
 from reNgine.celery import app
 
 from reNgine.common_func import *
+import logging
 
 
 def scan_history(request):
