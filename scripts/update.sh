@@ -20,7 +20,7 @@ ssh-add /home/cwave/.ssh/github_rsa
 
 out=$(git pull)
 [[ ! $? -eq 0 ]] && exit -1
-cat $out && \
+echo $out && \
 [[ $out == "Already up to date." ]] && exit -1
 echo "New code pulled from github"
 
