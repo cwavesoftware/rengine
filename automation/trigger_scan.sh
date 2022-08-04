@@ -43,6 +43,7 @@ wait () {
         sleep $sleepTime
         scan_status=$(curl -k -s -b cookiejar $1/api/scan/status/$last_scan_id | jq '.scanStatus')
         echo "Scan status = $scan_status"
+        [ $scan_status -eq 0 ] && echo "Scan failed" && exit -1
     done
 }
 
