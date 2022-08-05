@@ -6,6 +6,7 @@ if [ ! $# -eq 4 ]; then
 fi
 
 bash login.sh $1 $2 $3
+[[ ! $? -eq 0 ]] && exit -1
 
 echo "INFO: Getting CSRF token ..."
 csrf=$(curl -s $1/target/add/organization -b cookiejar -c cookiejar --insecure | sed -n "s/^.*name=\"csrfmiddlewaretoken\" value=\"\(.*\)\".*$/\1/p")

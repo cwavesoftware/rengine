@@ -6,6 +6,7 @@ if [ ! $# -eq 5 ]; then
 fi
 
 bash login.sh $1 $2 $3
+[[ ! $? -eq 0 ]] && exit -1
 
 echo "INFO: Getting CSRF token ..."
 csrf=$(curl -s $1/target/add/target -b cookiejar -c cookiejar --insecure | sed -n "s/^.*name=\"csrfmiddlewaretoken\" value=\"\(.*\)\".*$/\1/p" | head -n 1)
@@ -13,4 +14,4 @@ echo $csrf
 
 
 echo "INFO: Creating target ..."
-curl -s $1/target/add/target -b cookiejar --insecure -o /dev/null -d "csrfmiddlewaretoken=$csrf&name=$4&description=created%20via%20automation%20from%20Hackerone&h1_team_handle=$5&add-target=submit"
+curl -s $1/target/add/target -b cookiejar --insecure -o /dev/null -d "csrfmiddlewaretoken=$csrf&name=$4&description=created%20via%20automation%20script&h1_team_handle=$5&add-target=submit"
