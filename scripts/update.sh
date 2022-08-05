@@ -14,9 +14,7 @@ pending_scans=$(curl -k -b cookiejar -s $1/api/listScanHistory/ | jq '.scan_hist
 echo $pending_scans && \
 [[ $pending_scans != "" ]] && echo "Scans are still pending" && exit -1
 
-git config --global --add safe.directory /home/cwave/Applications/rengine
-eval $(ssh-agent) &&
-ssh-add /home/cwave/.ssh/github_rsa
+git config --global --add safe.directory $(pwd)
 
 out=$(git pull)
 [[ ! $? -eq 0 ]] && exit -1
