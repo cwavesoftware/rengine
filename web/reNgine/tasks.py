@@ -45,6 +45,7 @@ from scanEngine.models import EngineType, Configuration, Wordlist
 from .common_func import *
 from .slack import *
 from celery.utils.log import get_task_logger
+import urllib3.exceptions
 
 '''
 task for background scan
@@ -2153,7 +2154,11 @@ def get_and_save_meta_info(meta_dict):
     if proxy:
         os.environ['https_proxy'] = proxy
         os.environ['HTTPS_PROXY'] = proxy
-    result = metadata_extractor.extract_metadata_from_google_search(meta_dict.osint_target, meta_dict.documents_limit)
+    try:
+        result = metadata_extractor.extract_metadata_from_google_search(meta_dict.osint_target, meta_dict.documents_limit)
+    except urllib3.exceptions.NewConnectionError as ex:
+        logger.exception(ex)
+    
     if result:
         results = result.get_metadata()
         for meta in results:
