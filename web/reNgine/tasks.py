@@ -8,7 +8,6 @@ import csv
 import validators
 import random
 import requests
-import logging
 import metafinder.extractor as metadata_extractor
 import whatportis
 import subprocess
@@ -52,8 +51,6 @@ task for background scan
 '''
 
 logger = get_task_logger(__name__)
-if settings.DEBUG:
-    logger.setLevel(logging.DEBUG)
 
 @app.task
 def initiate_scan(

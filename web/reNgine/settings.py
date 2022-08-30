@@ -187,12 +187,8 @@ LOGGING = {
     },
     'formatters': {
         'verbose': {
-            'format': '[{asctime}: {levelname}/{name} {module}.py] {message}',
+            'format': '[{asctime} {filename}:{lineno}] {levelname} - {message}',
             'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
+        }
     },
 }
