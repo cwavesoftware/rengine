@@ -14,4 +14,10 @@ echo $csrf
 
 
 echo "INFO: Creating target ..."
-curl -s $1/target/add/target -b cookiejar --insecure -o /dev/null -d "csrfmiddlewaretoken=$csrf&name=$4&description=created%20via%20automation%20script&h1_team_handle=$5&add-target=submit"
+res=$(curl  --write-out '%{http_code}' -s $1/target/add/target -b cookiejar --insecure -o /dev/null -d "csrfmiddlewaretoken=$csrf&name=$4&description=created%20via%20automation%20script&h1_team_handle=$5&add-target=submit")
+if [ $res -eq 302 ]; then
+    echo "INFO: Creating target: SUCCESS"
+else    
+    echo "INFO: Creating target: FAIL"
+    exit -1
+fi
