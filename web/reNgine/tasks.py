@@ -2151,10 +2151,8 @@ def get_and_save_meta_info(meta_dict):
     if proxy:
         os.environ['https_proxy'] = proxy
         os.environ['HTTPS_PROXY'] = proxy
-    try:
-        result = metadata_extractor.extract_metadata_from_google_search(meta_dict.osint_target, meta_dict.documents_limit)
-    except urllib3.exceptions.NewConnectionError as ex:
-        logger.exception(ex)
+    
+    result = metadata_extractor.extract_metadata_from_google_search(meta_dict.osint_target, meta_dict.documents_limit)
     
     if result:
         results = result.get_metadata()
