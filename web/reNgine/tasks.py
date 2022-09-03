@@ -540,7 +540,6 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
     # check for interesting subdomains and send notif if any
     if notification and notification[0].send_interesting_notif:
         interesting_subdomain = get_interesting_subdomains(task.id, domain.id)
-        print(interesting_subdomain)
         if interesting_subdomain:
             message = "**{} Interesting Subdomains Found on domain {}**".format(interesting_subdomain.count(), domain.name)
             for subdomain in interesting_subdomain:
@@ -623,7 +622,7 @@ def http_crawler(task, domain, results_dir, activity_id):
         httpx_results_file
     )
     httpx_command = 'cat {} | {}'.format(subdomain_scan_results_file, httpx_command)
-    print(httpx_command)
+    logger.info(httpx_command)
     os.system(httpx_command)
 
     # alive subdomains from httpx
@@ -2042,7 +2041,6 @@ def get_and_save_employees(scan_history, results_dir):
     ))
 
     file_location = results_dir + '/theHarvester.html'
-    print(file_location)
     # delete proxy environ var
     if os.environ.get(('https_proxy')):
         del os.environ['https_proxy']
@@ -2076,7 +2074,7 @@ def get_and_save_employees(scan_history, results_dir):
         driver.quit()
 
 
-        print(tabledata)
+        logger.info(tabledata)
 
 
 def get_and_save_emails(scan_history, results_dir):
