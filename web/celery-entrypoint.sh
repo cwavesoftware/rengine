@@ -30,7 +30,6 @@ then
 fi
 
 python3 -m pip install -r /usr/src/github/dirsearch/requirements.txt
-yes | python3 /usr/src/github/dirsearch/dirsearch.py
 
 # clone Sublist3r
 if [ ! -d "/usr/src/github/Sublist3r" ]

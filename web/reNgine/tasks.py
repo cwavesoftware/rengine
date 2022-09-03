@@ -1054,7 +1054,7 @@ def directory_brute(task, domain, yaml_configuration, results_dir, activity_id):
         # delete any existing dirs.json
         if os.path.isfile(dirs_results):
             os.system('rm -rf {}'.format(dirs_results))
-        dirsearch_command = 'python3 /usr/src/github/dirsearch/dirsearch.py'
+        dirsearch_command = 'yes | python3 /usr/src/github/dirsearch/dirsearch.py'
 
         dirsearch_command += ' -u {}'.format(subdomain.http_url)
 
