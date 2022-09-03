@@ -9,6 +9,7 @@ import validators
 import random
 import requests
 import metafinder.extractor as metadata_extractor
+from reNgine import definitions
 import whatportis
 import subprocess
 import time
@@ -44,7 +45,6 @@ from scanEngine.models import EngineType, Configuration, Wordlist
 from .common_func import *
 from .slack import *
 from celery.utils.log import get_task_logger
-import urllib3.exceptions
 
 '''
 task for background scan
@@ -69,7 +69,7 @@ def initiate_scan(
     domain = Domain.objects.get(pk=domain_id)
     if scan_type == 1:
         task = ScanHistory()
-        task.scan_status = -1
+        task.scan_status = definitions.SCAN_STATUS_PENDING
     elif scan_type == 0:
         task = ScanHistory.objects.get(pk=scan_history_id)
 
@@ -77,11 +77,11 @@ def initiate_scan(
     domain.last_scan_date = timezone.now()
     domain.save()
 
-    # once the celery task starts, change the task status to Started
+    # once the celery task starts, change the task status to In Progress
     task.scan_type = engine_object
     task.celery_id = initiate_scan.request.id
     task.domain = domain
-    task.scan_status = 1
+    task.scan_status = definitions.SCAN_STATUS_IN_PROGRESS
     task.start_scan_date = timezone.now()
     task.subdomain_discovery = True if engine_object.subdomain_discovery else False
     task.dir_file_search = True if engine_object.dir_file_search else False
@@ -92,7 +92,8 @@ def initiate_scan(
     task.vulnerability_scan = True if engine_object.vulnerability_scan else False
     task.save()
 
-    activity_id = create_scan_activity(task, "Scanning Started", 2)
+    activity_id = create_scan_activity(task, "Scanning Started", definitions.SCAN_ACTIVITY_STATUS_COMPLETED)
+    logger.info(F"Scan started for {task.domain}, Celery ID {task.celery_id}")
     results_dir = '/usr/src/scan_results/'
     os.chdir(results_dir)
 
@@ -262,10 +263,10 @@ def initiate_scan(
     '''
     Once the scan is completed, save the status to successful
     '''
-    if ScanActivity.objects.filter(scan_of=task).filter(status=0).all():
-        task.scan_status = 0
+    if ScanActivity.objects.filter(scan_of=task).filter(status=definitions.SCAN_ACTIVITY_STATUS_FAILED).all():
+        task.scan_status = definitions.SCAN_ACTIVITY_STATUS_FAILED
     else:
-        task.scan_status = 2
+        task.scan_status = definitions.SCAN_ACTIVITY_STATUS_COMPLETED
     task.stop_scan_date = timezone.now()
     task.save()
     # cleanup results
@@ -1585,7 +1586,7 @@ def vulnerability_scan(
 
 
 def scan_failed(task):
-    task.scan_status = 0
+    task.scan_status = definitions.SCAN_ACTIVITY_STATUS_FAILED
     task.stop_scan_date = timezone.now()
     task.save()
 

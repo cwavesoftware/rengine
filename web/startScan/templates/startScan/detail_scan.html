@@ -294,10 +294,11 @@ Detailed Scan
 													</div>
 													<div class="t-text">
 														<p>{{activity.title}}{% if activity.status == 1 %}<span class="badge badge-warning">In Progress</span>{% endif %}</p>
-														<span class="badge {% if activity.status == 0 %}badge-danger {% elif activity.status == 1 %}badge-warning{% elif activity.status == 2 %}badge-success{% endif %}">
+														<span class="badge {% if activity.status == 0 or activity.status == 3 %}badge-danger {% elif activity.status == 1 %}badge-warning{% elif activity.status == 2 %}badge-success{% endif %}">
 															{% if activity.status == 0 %}&nbsp;Failed&nbsp;
 															{% elif activity.status == 1 %}&nbsp;In progress&nbsp;
 															{% elif activity.status == 2 %}&nbsp;Completed&nbsp;
+															{% elif activity.status == 3 %}&nbsp;Aborted&nbsp;
 															{% endif %}
 														</span>
 														<p class="t-time">{{activity.time|naturaltime}}</p>

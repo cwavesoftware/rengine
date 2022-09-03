@@ -21,6 +21,7 @@ from reNgine.celery import app
 
 from reNgine.common_func import *
 import logging
+from reNgine import definitions
 
 
 def scan_history(request):
@@ -281,17 +282,17 @@ def stop_scan(request, id):
         scan_history = get_object_or_404(ScanHistory, celery_id=id)
         # stop the celery task
         app.control.revoke(id, terminate=True, signal='SIGKILL')
-        scan_history.scan_status = 3
+        scan_history.scan_status = definitions.SCAN_ACTIVITY_STATUS_ABORTED
         scan_history.save()
         try:
             last_activity = ScanActivity.objects.filter(
                 scan_of=scan_history).order_by('-pk')[0]
-            last_activity.status = 0
+            last_activity.status = definitions.SCAN_ACTIVITY_STATUS_ABORTED
             last_activity.time = timezone.now()
             last_activity.save()
         except Exception as e:
-            print(e)
-        create_scan_activity(scan_history, "Scan aborted", 0)
+            logging.exception(e)
+        create_scan_activity(scan_history, "Scan aborted", definitions.SCAN_ACTIVITY_STATUS_COMPLETED)
         messageData = {'status': 'true'}
         messages.add_message(
             request,
