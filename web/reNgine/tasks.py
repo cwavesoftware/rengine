@@ -1095,7 +1095,7 @@ def directory_brute(task, domain, yaml_configuration, results_dir, activity_id):
         if proxy:
             dirsearch_command += " --proxy '{}'".format(proxy)
 
-        print(dirsearch_command)
+        logger.info(dirsearch_command)
         os.system(dirsearch_command)
 
         try:
@@ -1165,7 +1165,7 @@ def fetch_endpoints(
     if IGNORE_FILE_EXTENSION in yaml_configuration[FETCH_URL]:
         ignore_extension = '|'.join(
             yaml_configuration[FETCH_URL][IGNORE_FILE_EXTENSION])
-        logger.info('Ignore extensions' + ignore_extension)
+        logger.info('Ignore extensions ' + ignore_extension)
         os.system(
             'cat {0}/all_urls.txt | grep -Eiv "\\.({1}).*" > {0}/temp_urls.txt'.format(
                 results_dir, ignore_extension))
