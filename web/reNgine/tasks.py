@@ -1076,6 +1076,10 @@ def directory_brute(task, domain, yaml_configuration, results_dir, activity_id):
 
         dirsearch_command += ' --random-agent --follow-redirects --exclude-status 403,401,404'
 
+        dirsearch_command += ' --log {}/dirsearch.log'.format(results_dir)
+
+        dirsearch_command += ' --quiet-mode'
+
         if EXCLUDE_EXTENSIONS in yaml_configuration[DIR_FILE_SEARCH]:
             exclude_extensions = ','.join(
                 str(ext) for ext in yaml_configuration[DIR_FILE_SEARCH][EXCLUDE_EXTENSIONS])
