@@ -4,6 +4,7 @@ subdomain_discovery:
   use_amass_config: false
   use_subfinder_config: false
   compare_with: all_scans
+  validate_subdomains: true
 
 visual_identification:
   timeout: 10

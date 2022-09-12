@@ -481,6 +481,13 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
 
     # os.system('rm -f {}/subdomain_collection.txt'.format(results_dir))
 
+    if VALIDATE_SUBDOMAINS in yaml_configuration[SUBDOMAIN_DISCOVERY] and yaml_configuration[SUBDOMAIN_DISCOVERY][VALIDATE_SUBDOMAINS]:
+        logger.info("Validating the subdomains we found ...")
+        cmd = f"mv {subdomain_scan_results_file} {subdomain_scan_results_file}_invalidated && bash {settings.TOOL_LOCATION}validate_domains.sh {subdomain_scan_results_file}_invalidated > {subdomain_scan_results_file}"
+        logger.debug(cmd)
+        os.system(cmd)
+        logger.info(f"Subdomain validation done. Find results in {subdomain_scan_results_file}")
+
     '''
     The final results will be stored in sorted_subdomain_collection.
     '''
