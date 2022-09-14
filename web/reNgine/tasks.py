@@ -201,7 +201,7 @@ def initiate_scan(
                 perform_osint(task, domain, yaml_configuration, results_dir)
                 update_last_activity(activity_id, 2)
         except Exception as e:
-            logger.error(e)
+            logger.exception(e)
             update_last_activity(activity_id, 0)
 
 
@@ -1205,7 +1205,7 @@ def fetch_endpoints(
                             when parsed can give subdomains that were not existent from
                             subdomain scan. so storing them
                             '''
-                            logger.error(
+                            logger.warning(
                                 'Subdomain {} not found, adding...'.format(_subdomain))
                             subdomain_dict = DottedDict({
                                 'scan_history': task,

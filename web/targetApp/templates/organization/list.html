@@ -54,7 +54,7 @@ Organizations
           {% for organization in organizations.all %}
           <tr>
             <td class="checkbox-column"> {{ organization.id }} </td>
-            <td class="">{{ organization.name|capfirst }}</td>
+            <td class="">{{ organization.name }}</td>
             <td class="text-center">{% if organization.description %}{{organization.description}}{% endif %}</td>
             <td class="text-center"><span class="badge badge-pills badge-info badge-link" onclick="get_target_modal({{organization.id}})">{{organization.get_domains.count}}</span></td>
             <td class="text-center">{{ organization.insert_date }}</td>

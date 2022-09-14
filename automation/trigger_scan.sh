@@ -70,4 +70,4 @@ if [ $# == 7 ] && [ $7 = "--wait" ]; then
 fi
 rm cookiejar
 
-echo "INFO: Done"
+echo "INFO: $0 Done"
