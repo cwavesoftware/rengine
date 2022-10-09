@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 if [[ $3 == "deep" ]] ; then
   for i in "$@" ; do
       if [[ $i == "gauplus" ]] ; then
@@ -27,7 +27,7 @@ else
       fi
       if [[ $i == "hakrawler" ]] ; then
         echo "Running hakrawler"
-        hakrawler -plain -url $1 | grep -Eo $4 > $2/urls_hakrawler.txt
+        echo http://$1 | hakrawler -subs -insecure | grep -Eo $4 > $2/urls_hakrawler.txt
       fi
       if [[ $i == "waybackurls" ]] ; then
         echo "Running waybackurls"
@@ -45,7 +45,7 @@ echo "Finished gathering urls, now sorting and running http probing"
 cat $2/urls* > $2/final_urls.txt
 
 # remove all urls*
-rm -rf $2/url*
+#rm -rf $2/url*
 
 # Sort and unique the endpoints
 cat $2/alive.txt >> $2/final_urls.txt
