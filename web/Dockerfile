@@ -35,10 +35,10 @@ RUN apt update -y && apt install -y  --no-install-recommends \
     xvfb \
     dnsutils
 
-# Download and install go 1.17
-RUN wget https://golang.org/dl/go1.17.2.linux-amd64.tar.gz
-RUN tar -xvf go1.17.2.linux-amd64.tar.gz
-RUN rm go1.17.2.linux-amd64.tar.gz
+# Download and install go 1.18
+RUN wget https://golang.org/dl/go1.18.7.linux-amd64.tar.gz
+RUN tar -xvf go1.18.7.linux-amd64.tar.gz
+RUN rm go1.18.7.linux-amd64.tar.gz
 RUN mv go /usr/local
 
 # Download geckodriver
@@ -96,6 +96,7 @@ RUN python3 -m pip install fuzzywuzzy \
     netaddr
 
 RUN apt install -y openimageio-tools
+RUN apt install -y jq
 
 # Copy source code
 COPY . /usr/src/app/
