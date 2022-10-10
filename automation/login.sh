@@ -12,5 +12,5 @@ echo "DEBUG: csrftoken=$csrf" && \
 echo "INFO: Logging in ..." && \
 curl -s -d "username=$2&password=$3&csrfmiddlewaretoken=$csrf" "$1/login/" -X POST -b cookiejar -c cookiejar --insecure > /dev/null && \
 sessionid=$(cat cookiejar | grep sessionid | rev | cut -d$'\t' -f1 | rev) && \
-[[ $sessionid != "" ]] && echo "INFO: Got sessionid" && exit 0
+[[ $sessionid != "" ]] && echo "INFO: Got sessionid" && echo "DEBUG: sessionid = $sessionid" && exit 0
 echo "ERROR: Couldn't get sessionid" && exit -1

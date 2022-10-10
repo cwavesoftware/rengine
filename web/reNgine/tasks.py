@@ -222,7 +222,7 @@ def initiate_scan(
 
         try:
             if task.fetch_url:
-                activity_id = create_scan_activity(task, "Fetching endpoints", 1)
+                activity_id = create_scan_activity(task, "Fetching URLs", 1)
                 fetch_endpoints(
                     task,
                     domain,
@@ -450,8 +450,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
         os.system(extract_subdomain)
 
         # remove the results from oneforall directory
-        os.system(
-            'rm -rf /usr/src/github/OneForAll/results/{}.*'.format(domain.name))
+        # os.system('rm -rf /usr/src/github/OneForAll/results/{}.*'.format(domain.name))
 
     '''
     All tools have gathered the list of subdomains with filename
@@ -619,7 +618,7 @@ def http_crawler(task, domain, results_dir, activity_id):
     httpx_results_file = results_dir + '/httpx.json'
 
     subdomain_scan_results_file = results_dir + '/sorted_subdomain_collection.txt'
-    httpx_command = 'httpx -status-code -content-length -title -tech-detect -cdn -ip -follow-host-redirects -random-agent'
+    httpx_command = 'httpx -status-code -content-length -title -tech-detect -cdn -ip -follow-host-redirects -random-agent -silent 1>/dev/null'
 
     proxy = get_random_proxy()
     if proxy:
@@ -1163,15 +1162,15 @@ def fetch_endpoints(
     else:
         # perform url gathering only for main domain - USE only for quick scan
         logger.info('Non Deep URLS Fetch')
-        os.system(
-            settings.TOOL_LOCATION +
-            'get_urls.sh %s %s %s %s %s' % (
+        get_urls_command = settings.TOOL_LOCATION + 'get_urls.sh %s %s %s %s %s' % (
                 domain.name,
                 results_dir,
                 scan_type,
                 domain_regex,
                 tools
-            ))
+            )
+        logger.info(get_urls_command)
+        os.system(get_urls_command )
 
     if IGNORE_FILE_EXTENSION in yaml_configuration[FETCH_URL]:
         ignore_extension = '|'.join(
@@ -1186,61 +1185,57 @@ def fetch_endpoints(
     '''
     Store all the endpoints and then run the httpx
     '''
-    try:
-        endpoint_final_url = results_dir + '/all_urls.txt'
-        if os.path.isfile(endpoint_final_url):
-            with open(endpoint_final_url) as endpoint_list:
-                for url in endpoint_list:
-                    http_url = url.rstrip('\n')
-                    if not EndPoint.objects.filter(scan_history=task, http_url=http_url).exists():
-                        _subdomain = get_subdomain_from_url(http_url)
-                        if Subdomain.objects.filter(
-                                scan_history=task).filter(
-                                name=_subdomain).exists():
-                            subdomain = Subdomain.objects.get(
-                                scan_history=task, name=_subdomain)
-                        else:
-                            '''
-                            gau or gosppider can gather interesting endpoints which
-                            when parsed can give subdomains that were not existent from
-                            subdomain scan. so storing them
-                            '''
-                            logger.warning(
-                                'Subdomain {} not found, adding...'.format(_subdomain))
-                            subdomain_dict = DottedDict({
-                                'scan_history': task,
-                                'target_domain': domain,
-                                'name': _subdomain,
-                            })
-                            subdomain = save_subdomain(subdomain_dict)
-                        endpoint_dict = DottedDict({
-                            'scan_history': task,
-                            'target_domain': domain,
-                            'subdomain': subdomain,
-                            'http_url': http_url,
-                        })
-                        save_endpoint(endpoint_dict)
-    except Exception as e:
-        logger.error(e)
+    # try:
+    #     endpoint_final_url = results_dir + '/all_urls.txt'
+    #     if os.path.isfile(endpoint_final_url):
+    #         with open(endpoint_final_url) as endpoint_list:
+    #             for url in endpoint_list:
+    #                 http_url = url.rstrip('\n')
+    #                 if not EndPoint.objects.filter(scan_history=task, http_url=http_url).exists():
+    #                     _subdomain = get_subdomain_from_url(http_url)
+    #                     if Subdomain.objects.filter(
+    #                             scan_history=task).filter(
+    #                             name=_subdomain).exists():
+    #                         subdomain = Subdomain.objects.get(
+    #                             scan_history=task, name=_subdomain)
+    #                     else:
+    #                         '''
+    #                         gau or gosppider can gather interesting endpoints which
+    #                         when parsed can give subdomains that were not existent from
+    #                         subdomain scan. so storing them
+    #                         '''
+    #                         logger.warning(
+    #                             'Subdomain {} not found, adding...'.format(_subdomain))
+    #                         subdomain_dict = DottedDict({
+    #                             'scan_history': task,
+    #                             'target_domain': domain,
+    #                             'name': _subdomain,
+    #                         })
+    #                         subdomain = save_subdomain(subdomain_dict)
+    #                     endpoint_dict = DottedDict({
+    #                         'scan_history': task,
+    #                         'target_domain': domain,
+    #                         'subdomain': subdomain,
+    #                         'http_url': http_url,
+    #                     })
+    #                     save_endpoint(endpoint_dict)
+    # except Exception as e:
+    #     logger.error(e)
 
-    if notification and notification[0].send_scan_output_file:
-        send_files_to_discord(results_dir + '/all_urls.txt')
+    # if notification and notification[0].send_scan_output_file:
+    #     send_files_to_discord(results_dir + '/all_urls.txt')
 
-    '''
-    TODO:
-    Go spider & waybackurls accumulates a lot of urls, which is good but nuclei
-    takes forever to scan even a simple website, so we will do http probing
-    and filter HTTP status 404, this way we can reduce the number of Non Existent
-    URLS
-    '''
     logger.info('HTTP Probing on collected endpoints')
 
-    httpx_command = 'httpx -l {0}/all_urls.txt -status-code -content-length -ip -cdn -title -tech-detect -json -follow-redirects -random-agent -o {0}/final_httpx_urls.json'.format(results_dir)
+    httpx_command = 'httpx -l {0}/all_urls.txt -status-code -content-length -ip -cdn -title -tech-detect -json -follow-redirects -random-agent -o {0}/final_httpx_urls.json -silent 1>/dev/null'.format(results_dir)
+
+    if FETCH_URL in yaml_configuration and FILTER_STATUS_CODE in yaml_configuration[FETCH_URL]:
+        httpx_command += f" -fc {','.join([str(code) for code in yaml_configuration[FETCH_URL][FILTER_STATUS_CODE]])}"
 
     proxy = get_random_proxy()
     if proxy:
         httpx_command += " --http-proxy '{}'".format(proxy)
-
+    logger.info(httpx_command)
     os.system(httpx_command)
 
     url_results_file = results_dir + '/final_httpx_urls.json'
@@ -1282,7 +1277,7 @@ def fetch_endpoints(
                 endpoint = save_endpoint(endpoint_dict)
 
             if 'title' in json_st:
-                endpoint.page_title = json_st['title']
+                endpoint.page_title = json_st['title'][0:1000]
             if 'webserver' in json_st:
                 endpoint.webserver = json_st['webserver']
             if 'content-length' in json_st:
@@ -1310,7 +1305,7 @@ def fetch_endpoints(
                     subdomain.technologies.add(tech)
                     subdomain.save()
     except Exception as exception:
-        logger.error(exception)
+        logger.exception(exception)
         update_last_activity(activity_id, 0)
 
     if notification and notification[0].send_scan_status_notif:
@@ -1331,7 +1326,7 @@ def fetch_endpoints(
             logger.info('Running GF for {}'.format(pattern))
             gf_output_file_path = '{0}/gf_patterns_{1}.txt'.format(
                 results_dir, pattern)
-            gf_command = 'cat {0}/all_urls.txt | gf {1} >> {2}'.format(
+            gf_command = 'cat {0}/final_httpx_urls.json | jq ".url" | sed "s/\\\"//g" | gf {1} >> {2}'.format(
                 results_dir, pattern, gf_output_file_path)
             os.system(gf_command)
             if os.path.exists(gf_output_file_path):
@@ -1347,7 +1342,7 @@ def fetch_endpoints(
                         except Exception as e:
                             # add the url in db
                             logger.error(e)
-                            logger.info('Adding URL' + url)
+                            logger.info('Adding URL ' + url)
                             endpoint = EndPoint()
                             endpoint.http_url = url
                             endpoint.target_domain = domain
@@ -1357,7 +1352,7 @@ def fetch_endpoints(
                                     scan_history=task, name=get_subdomain_from_url(url))
                                 endpoint.subdomain = _subdomain
                             except Exception as e:
-                                continue
+                                logger.exception(e)
                             endpoint.matched_gf_patterns = pattern
                         finally:
                             endpoint.save()
@@ -1381,7 +1376,9 @@ def vulnerability_scan(
     '''
     urls_path = '/alive.txt'
     if task.scan_type.fetch_url:
-        os.system('cat {0}/all_urls.txt | grep -Eiv "\\.(eot|jpg|jpeg|gif|css|tif|tiff|png|ttf|otf|woff|woff2|ico|pdf|svg|txt|js|doc|docx)$" | unfurl -u format %s://%d%p >> {0}/unfurl_urls.txt'.format(results_dir))
+        # os.system('cat {0}/all_urls.txt | grep -Eiv "\\.(eot|jpg|jpeg|gif|css|tif|tiff|png|ttf|otf|woff|woff2|ico|pdf|svg|txt|js|doc|docx)$" | unfurl -u format %s://%d%p >> {0}/unfurl_urls.txt'.format(results_dir))
+        os.system('cat {0}/final_httpx_urls.json | jq ".url" | sed "s/\\\"//g" | grep -Eiv "\\.(eot|jpg|jpeg|gif|css|tif|tiff|png|ttf|otf|woff|woff2|ico|pdf|svg|txt|js|doc|docx)$" | unfurl -u format %s://%d%p >> {0}/unfurl_urls.txt'.format(results_dir))
+
         os.system(
             'sort -u {0}/unfurl_urls.txt -o {0}/unfurl_urls.txt'.format(results_dir))
         urls_path = '/unfurl_urls.txt'
