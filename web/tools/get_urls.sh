@@ -35,7 +35,7 @@ else
       fi
       if [[ $i == "gospider" ]] ; then
         echo "Running gospider"
-        gospider -s "https://"$2/alive.txt --sitemap --robots --js | grep -Eo $4 > $2/urls_gospider.txt
+        gospider -s https://$1 --sitemap --robots --js | grep -Eo $4 > $2/urls_gospider.txt
       fi
   done
 fi
