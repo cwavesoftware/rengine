@@ -73,6 +73,14 @@ def initiate_scan(
     elif scan_type == 0:
         task = ScanHistory.objects.get(pk=scan_history_id)
 
+    '''
+    Workaround for long-running tasks that takes longer than the configured visibility_timeout (1h default for redis)
+    See https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/redis.html?highlight=visibility#id1
+    '''
+    if task.scan_status != definitions.SCAN_STATUS_PENDING:
+        return {"status": "skipped (already started)"}
+        
+
     # save the last scan date for domain model
     domain.last_scan_date = timezone.now()
     domain.save()

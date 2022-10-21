@@ -165,10 +165,11 @@ TOOL_LOCATION = '/usr/src/app/tools/'
 '''
 CELERY settings
 '''
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://rengine-redis:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://rengine-redis:6379/0")
 CELERY_ENABLE_UTC = False
 CELERY_TIMEZONE = 'Europe/Bucharest'
+CELERY_HIJACK_ROOT_LOGGER = False
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

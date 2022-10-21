@@ -16,7 +16,7 @@ services:
 
   redis:
     image: "redis:alpine"
-    hostname: redis
+    hostname: rengine-redis
     restart: always
 
   celery:
@@ -35,8 +35,8 @@ services:
       - tool_config:/root/.config
     environment:
       - DEBUG=1
-      - CELERY_BROKER=redis://redis:6379/0
-      - CELERY_BACKEND=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://rengine-redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://rengine-redis:6379/0
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -57,8 +57,8 @@ services:
       - celery
     environment:
       - DEBUG=1
-      - CELERY_BROKER=redis://redis:6379/0
-      - CELERY_BACKEND=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://rengine-redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://rengine-redis:6379/0
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}

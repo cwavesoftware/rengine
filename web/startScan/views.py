@@ -443,7 +443,7 @@ def create_scan_object(host_id, engine_type):
     engine_object = EngineType.objects.get(pk=engine_type)
     domain = Domain.objects.get(pk=host_id)
     task = ScanHistory()
-    task.scan_status = -1
+    task.scan_status = definitions.SCAN_STATUS_PENDING
     task.domain = domain
     task.scan_type = engine_object
     task.start_scan_date = current_scan_time
