@@ -2173,7 +2173,16 @@ def get_and_save_meta_info(meta_dict):
         results = result.get_metadata()
         for meta in results:
             meta_finder_document = MetaFinderDocument()
-            subdomain = Subdomain.objects.get(scan_history=meta_dict.scan_id, name=meta_dict.osint_target)
+            if Subdomain.objects.filter(scan_history=meta_dict.scan_id, name=meta_dict.osint_target).exists():
+                subdomain = Subdomain.objects.get(scan_history=meta_dict.scan_id, name=meta_dict.osint_target)
+            else:
+                subdomain = Subdomain()
+                subdomain.discovered_date = timezone.now()
+                subdomain.target_domain = meta_dict.domain
+                subdomain.scan_history = meta_dict.scan_id
+                subdomain.name = meta_dict.osint_target
+                subdomain.save()
+
             meta_finder_document.subdomain = subdomain
             meta_finder_document.target_domain = meta_dict.domain
             meta_finder_document.scan_history = meta_dict.scan_id
