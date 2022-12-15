@@ -2,5 +2,8 @@
 
 while read -r domain
 do
-  nslookup $domain 1>/dev/null 2>&1 && [[ $(nslookup $domain | grep 'canonical name') == "" ]] && echo $domain
+  lookup=$(nslookup $domain); r=$?
+  #echo $lookup
+  #echo $r
+  [[ $r -eq 0 ]] && [[ $(echo $lookup | grep -i 'no answer') == "" ]] && echo $domain
 done < $1
