@@ -148,7 +148,7 @@ def initiate_scan(
     if yaml_configuration:
         '''
         a target in itself is a subdomain, some tool give subdomains as
-        www.yogeshojha.com but url and everything else resolves to yogeshojha.com
+        www.cwavesoftware.com but url and everything else resolves to cwavesoftware.com
         In that case, we would already need to store target itself as subdomain
         '''
         initial_subdomain_file = '/target_domain.txt' if task.subdomain_discovery else '/sorted_subdomain_collection.txt'

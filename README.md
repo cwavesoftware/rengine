@@ -2,18 +2,8 @@
 <a href="https://rengine.wiki"><img src=".github/screenshots/banner.gif" alt=""/></a>
 </p>
 
-<p align="center"><a href="https://github.com/yogeshojha/rengine/releases" target="_blank"><img src="https://img.shields.io/badge/version-v1.0.1-informational?&logo=none" alt="reNgine Latest Version" /></a>&nbsp;<a href="https://www.gnu.org/licenses/gpl-3.0" target="_blank"><img src="https://img.shields.io/badge/License-GPLv3-red.svg?&logo=none" alt="License" /></a>&nbsp;<a href="https://github.com/yogeshojha/rengine/issues" target="_blank"><img src="https://img.shields.io/github/issues/yogeshojha/rengine?color=red&logo=none" alt="reNgine Issues" /></a>&nbsp;<a href="#" target="_blank"><img src="https://img.shields.io/badge/first--timers--only-friendly-blue.svg?&logo=none" alt="" /></a>&nbsp;<a href="https://huntr.dev/bounties/disclose/?target=https%3A%2F%2Fgithub.com%2Fyogeshojha%2Frengine" target="_blank"><img src="https://cdn.huntr.dev/huntr_security_badge_mono.svg" alt="" /></a>&nbsp;</p>
-
-
-<p align="center"><a href="https://www.youtube.com/watch?v=A1oNOIc0h5A" target="_blank"><img src="https://img.shields.io/badge/Black--Hat--Arsenal-Europe--2020-blue.svg?&logo=none" alt="" /></a>&nbsp;<a href="https://www.youtube.com/watch?v=7uvP6MaQOX0" target="_blank"><img src="https://img.shields.io/badge/Black--Hat--Arsenal-USA--2021-blue.svg?logo=none" alt="" /></a>&nbsp;<a href="https://drive.google.com/file/d/1Bh8lbf-Dztt5ViHJVACyrXMiglyICPQ2/view?usp=sharing" target="_blank"><img src="https://img.shields.io/badge/Defcon--Demolabs--29-2021-blue.svg?logo=none" alt="" /></a>&nbsp;</p>
-
 <p align="center">
-<a href="https://github.com/yogeshojha/rengine/actions/workflows/codeql-analysis.yml" target="_blank"><img src="https://github.com/yogeshojha/rengine/actions/workflows/codeql-analysis.yml/badge.svg" alt="" /></a>&nbsp;<a href="https://github.com/yogeshojha/rengine/actions/workflows/build.yml" target="_blank"><img src="https://github.com/yogeshojha/rengine/actions/workflows/build.yml/badge.svg" alt="" /></a>&nbsp;
-</p>
-
-<p align="center">
-<a href="https://discord.gg/H6WzebwX3H" target="_blank"><img src="https://img.shields.io/discord/880363103689277461" alt="" /></a>&nbsp;
-</p>
+</a>&nbsp;<a href="https://www.gnu.org/licenses/gpl-3.0" target="_blank"><img src="https://img.shields.io/badge/License-GPLv3-red.svg?&logo=none" alt="License" /></a>&nbsp;<a href="https://github.com/cwavesoftware/rengine/issues" target="_blank"><img src="https://img.shields.io/github/issues/cwavesoftware/rengine?color=red&logo=none" alt="reNgine Issues" /></a>&nbsp;<a href="#" target="_blank"><img src="https://img.shields.io/badge/first--timers--only-friendly-blue.svg?&logo=none" alt="" /></a></p>
 
 <p align="left">An automated reconnaissance framework for web applications with focus on highly configurable streamlined recon process via Engines, recon data correlation and organization, continuous monitoring, backed by database and simple yet intuitive User Interface.</p>
 
@@ -27,17 +17,6 @@ Dashboard             |  Scan Results
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/aqua.png)
 
-<p align="center">
-    ⭐<a href="https://rengine.wiki">reNgine Documentation</a>
-    ·
-    <a href="https://rengine.wiki/changelog/">What's new</a>
-    ·
-    <a href="https://github.com/yogeshojha/rengine/blob/master/CONTRIBUTING.md">Contribute</a>
-    ·
-    <a href="https://github.com/yogeshojha/rengine/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/yogeshojha/rengine/issues">Request Feature</a>⭐
-</p>
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/aqua.png)
 
@@ -47,11 +26,7 @@ Dashboard             |  Scan Results
 * [Features](#features)
 * [Documentation](#documentation)
 * [Screenshots](#screenshots)
-* [What's new in reNgine](#changelog)
 * [Quick Installation](#quick-installation)
-* [reNgine Bug Bounty Program](#reNgine-bug-bounty-program)
-* [Contributing](#contributing)
-* [reNgine Support](#reNgine-support)
 * [Related Projects](#related-projects)
 * [Support and Sponsor](#support-and-sponsoring)
 * [Acknowledgements & Credits](#acknowledgements-and-credits)
@@ -108,13 +83,12 @@ We also want our fellow hackers to stay ahead of the game, reNgine 1.0 introduce
 
 ## Documentation
 
-You can find reNgine documentation at [https://rengine.wiki](https://rengine.wiki)
+The core features of reNgine are documented in the author's [original docs](https://rengine.wiki). This fork has additional features that <b>might</b> be documented at some point. Feel free to look into the code or check the commit history to get an idea about what has beed added.
 
 ## Screenshots
 
 **General Usage**
 <img src=".github/screenshots/3.gif">
-
 
 **Dark Mode**
 <img src=".github/screenshots/dark.gif">
@@ -148,15 +122,6 @@ You can find reNgine documentation at [https://rengine.wiki](https://rengine.wik
 
 </details>
 
-![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/aqua.png)
-
-
-## Changelog
-
-You can watch [reNgine 1.0 release trailer here.](https://www.youtube.com/watch?v=_jBf_9qEG3U) (Recommended)
-
-[Please find the latest release notes and changelog here.](https://rengine.wiki/changelog/)
-
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/aqua.png)  
 
 ## Quick Installation
@@ -166,13 +131,13 @@ You can watch [reNgine 1.0 release trailer here.](https://www.youtube.com/watch?
 1. Clone this repo
 
 ```
-git clone https://github.com/yogeshojha/rengine && cd rengine
+git clone https://github.com/cwavesoftware/rengine && cd rengine
 ```
 
 2. Edit the dotenv file, **please make sure to change the password for postgresql POSTGRES_PASSWORD !**
 
 ```
-nano .env
+vim .env
 ```
 
 3. Run the installation script, Please keep an eye for any prompt, you will also be asked for username and password for reNgine.
@@ -189,58 +154,6 @@ if `./install.sh` does not have install permission, please change it, `chmod +x 
 
 Installation instructions can be found at [https://reNgine.wiki](https://reNgine.wiki)
 
-## reNgine Bug Bounty Program
-
-[![huntr](https://cdn.huntr.dev/huntr_security_badge_mono.svg)](https://huntr.dev/bounties/disclose/?target=https%3A%2F%2Fgithub.com%2Fyogeshojha%2Frengine)
-
-Security Researchers, welcome onboard! I am excited to announce bug bounty program for reNgine in collaboration with [huntr.dev](https://huntr.dev), this means you'll be rewarded for any security vulnerabilities discovered in reNgine.
-
-Thank you for your interest in reporting vulnerabilities to reNgine! If you are aware of potential security vulnerabilities within reNgine, we encourage you to report immediately via [huntr.dev](https://huntr.dev/bounties/disclose/?target=https%3A%2F%2Fgithub.com%2Fyogeshojha%2Frengine)
-
-**Please do not disclose any vulnerabilities via Github Issues/Blogs/Tweets after/before reporting on huntr.dev as it is explicitly against huntr.dev and reNgine disclosure policy and will not be eligible for monetary rewards.**
-
-Please note that the maintainer of reNgine does not determine the bounty amount.
-The bounty reward is determined by industry-first equation from huntr.dev to understand the popularity, impact and value of repositories to the open source community.
-
-**What do I expect from security researchers?**
-
-* Patience: Please note that currently I am the only maintainer in reNgine and will take sometime to validate your report. I request your patience throughout the process.
-* Respect Privacy and Security Reports: Please do not disclose any vulnerabilities in public (this also includes github issues) before or after reporting on huntr.dev! That is against the disclosure policy and will not be eligible for monetary rewards.
-* Respect the rules
-
-**What do you get in return?**
-
-* Much thanks from Maintainer
-* Monetary Rewards
-* CVE ID(s)
-
-Please find the [FAQ](https://www.huntr.dev/faq) and [Responsible disclosure policy](https://www.huntr.dev/policy/) from huntr.dev.
-
-![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/aqua.png)
-
-## Contributing
-
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**. Your contributions could be as simple as fixing the indentations or fixing UI to as complex as bringing new modules and features.
-
-See [contributing guide](.github/CONTRIBUTING.md) to get started.
-
-You can also [join our discord channel #development](https://discord.gg/JuhHdHTtwd) for any development related queries.
-
-![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/aqua.png)
-
-### First-time Open Source contributors
-
-Please note that reNgine is beginner-friendly. If you have never done any open-source yet, we encourage you to do so. **We will be happy and proud of your first PR ever.**
-
-You can begin with resolving any [open issues](https://github.com/yogeshojha/rengine/issues).
-
-![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/aqua.png)
-
-
-## reNgine Support
-
-Please do not raise any github issues for support requests. Instead, [join our discord channel #support](https://discord.gg/azv6fzhNCE)
-
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/aqua.png)
 
 ## Related Projects
@@ -254,14 +167,10 @@ There are many other great reconnaissance frameworks, you may use reNgine in con
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/aqua.png)
 
 ## Support and Sponsoring
-
 If reNgine has helped you in any way, and you love this project and/or support active development of reNgine, please consider any of these options:
 
-- Add a [GitHub Star](https://github.com/yogeshojha/rengine) to the project.
+- Add a [GitHub Star](https://github.com/cwavesoftware/rengine) to the project.
 - Tweet about this project, or maybe blogs?
-- Sponsor financially via Github or Paypal. https://paypal.me/yogeshojha11
-- Join DigitalOcean using my [referral link](https://m.do.co/c/e353502d19fc) your profit is **$100** and I get $25 DO credit. This will help me test reNgine on VPS before I release any major features. ps. Please consider running reNgine/any recon on VPS!
-- If you are looking for Proxies, please use [this referral](https://app.privateproxy.me/from/27103) link to purchase. Or you can also use coupon `rengine` here on [PrivateProxy](https://privateproxy.me/), using coupon `rengine`, you'll get additional 25% off.
 
 Together, we can make reNgine **better** every day!
 
@@ -269,6 +178,8 @@ Together, we can make reNgine **better** every day!
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/aqua.png)
 
 ## Acknowledgements and Credits
+***This is a fork of the original [reNgine](https://github.com/yogeshojha/rengine). Main credits go to [yogeshojha](https://github.com/yogeshojha).***
+
 reNgine would not have been possible without the following individuals/organizations. Thanks to these amazing devs/hackers!
 
 - Project Discovery
