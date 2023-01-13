@@ -58,3 +58,4 @@ get-docker.sh
 
 .idea
 automation/included_subdomains.txt
+cookiejar
