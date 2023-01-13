@@ -17,8 +17,9 @@ echo $pending_scans && \
 [[ $pending_scans != "" ]] && echo "Scans are still pending" && exit -1
 
 git config --global --add safe.directory $(pwd)
-
+git stash
 out=$(git pull)
+git stash apply
 [[ ! $? -eq 0 ]] && exit -1
 echo $out && \
 [[ $out == "Already up to date." ]] && exit -1
