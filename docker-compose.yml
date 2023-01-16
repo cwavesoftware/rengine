@@ -55,6 +55,8 @@ services:
     restart: always
     entrypoint: /usr/src/app/beat-entrypoint.sh
     command: celery -A reNgine beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    depends_on:
+      - celery
     environment:
       - DEBUG=0
       - CELERY_BROKER_URL=redis://rengine-redis:6379/0
@@ -66,8 +68,6 @@ services:
       - POSTGRES_HOST=${POSTGRES_HOST}
       - SLACK_USER=${SLACK_USER?SLACK_USER_NOT_DEFINED}
       - SLACK_TOKEN=${SLACK_TOKEN?SLACK_TOKEN_NOT_DEFINED}
-    depends_on:
-      - celery
     volumes:
       - ./web:/usr/src/app
       - github_repos:/usr/src/github
