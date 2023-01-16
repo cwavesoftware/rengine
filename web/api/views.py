@@ -107,7 +107,10 @@ class ListTodoNotes(APIView):
 class ListScanHistory(APIView):
     def get(self, request, format=None):
         req = self.request
+        target_id = req.query_params.get('target_id')
         scan_history = ScanHistory.objects.all().order_by('-start_scan_date')
+        if target_id:
+            scan_history = scan_history.filter(domain__id=target_id)
         scan_history = ScanHistorySerializer(scan_history, many=True)
         return Response({'scan_histories': scan_history.data})
 
