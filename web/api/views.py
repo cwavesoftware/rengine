@@ -180,11 +180,18 @@ class ListEndpoints(APIView):
     def get(self, request, format=None):
         req = self.request
         scan_id = req.query_params.get('scan_id')
+        target_id = req.query_params.get('target_id')
+        target_name = req.query_params.get('target_name')
+
         subdomain_name = req.query_params.get('subdomain_name')
         pattern = req.query_params.get('pattern')
 
         if scan_id:
             endpoints = EndPoint.objects.filter(scan_history__id=scan_id)
+        elif target_id:
+            endpoints = EndPoint.objects.filter(target_domain__id=target_id)
+        elif target_name:
+            endpoints = EndPoint.objects.filter(target_domain__name=target_name)
         else:
             endpoints = EndPoint.objects.all()
 
@@ -334,6 +341,7 @@ class ListSubdomains(APIView):
         req = self.request
         scan_id = req.query_params.get('scan_id')
         target_id = req.query_params.get('target_id')
+        target_name = req.query_params.get('target_name')
         ip_address = req.query_params.get('ip_address')
         port = req.query_params.get('port')
         tech = req.query_params.get('tech')
@@ -342,6 +350,8 @@ class ListSubdomains(APIView):
             subdomain_query = Subdomain.objects.filter(scan_history__id=scan_id).distinct('name')
         elif target_id:
             subdomain_query = Subdomain.objects.filter(target_domain__id=target_id).distinct('name')
+        elif target_name:
+            subdomain_query = Subdomain.objects.filter(target_domain__name=target_name).distinct('name')
         else:
             subdomain_query = Subdomain.objects.all().distinct('name')
 
@@ -448,12 +458,22 @@ class SubdomainsViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         req = self.request
         scan_id = req.query_params.get('scan_id')
+        target_id = req.query_params.get('target_id')
+        target_name = req.query_params.get('target_name')
+
         if scan_id:
             if 'only_screenshot' in self.request.query_params:
                 return Subdomain.objects.filter(
                     scan_history__id=scan_id).exclude(
                     screenshot_path__isnull=True).only('name', 'screenshot_path', 'http_status')
             return Subdomain.objects.filter(scan_history=scan_id)
+        elif target_id:
+            return Subdomain.objects.filter(target_domain__id=target_id).distinct('name')
+        elif target_name:
+            return Subdomain.objects.filter(target_domain__name=target_name).distinct('name')
+        else:
+            return Subdomain.objects.all()
+            
 
     def paginate_queryset(self, queryset, view=None):
         if 'no_page' in self.request.query_params:
