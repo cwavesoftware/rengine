@@ -4,6 +4,9 @@ services:
   db:
     restart: always
     image: "postgres:12.3-alpine"
+    shm_size: 1g
+    mem_limit: "8g"
+    mem_reservation: "4g"
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -23,6 +26,8 @@ services:
     build:
       context: ./web
     restart: always
+    mem_limit: "8g"
+    mem_reservation: "4g"
     entrypoint: /usr/src/app/celery-entrypoint.sh
     command: watchmedo auto-restart --recursive --pattern="*.py" --directory="/usr/src/app/reNgine/" -- celery -A reNgine worker --concurrency ${MAX_CONCURRENT_SCANS?MAX_CONCURRENT_SCANS_NOT_DEFINED} -l INFO
     volumes:
@@ -81,6 +86,8 @@ services:
     entrypoint: /usr/src/app/entrypoint.sh
     restart: always
     image: cosmin91ro/rengine:latest
+    mem_limit: "8g"
+    mem_reservation: "4g"
     environment:
       - DEBUG=1
       - CELERY_BROKER=redis://redis:6379/0
