@@ -108,9 +108,13 @@ class ListScanHistory(APIView):
     def get(self, request, format=None):
         req = self.request
         target_id = req.query_params.get('target_id')
+        target_name = req.query_params.get('target_name')
+
         scan_history = ScanHistory.objects.all().order_by('-start_scan_date')
         if target_id:
             scan_history = scan_history.filter(domain__id=target_id)
+        elif target_name:
+            scan_history = scan_history.filter(domain__name=target_name)
         scan_history = ScanHistorySerializer(scan_history, many=True)
         return Response({'scan_histories': scan_history.data})
 
@@ -402,13 +406,17 @@ class ListIPs(APIView):
         req = self.request
         scan_id = req.query_params.get('scan_id')
         target_id = req.query_params.get('target_id')
-
+        target_name = req.query_params.get('target_name')
         port = req.query_params.get('port')
 
         if target_id:
             ips = IpAddress.objects.filter(
                 ip_addresses__in=Subdomain.objects.filter(
                     target_domain__id=target_id)).distinct()
+        elif target_name:
+            ips = IpAddress.objects.filter(
+                ip_addresses__in=Subdomain.objects.filter(
+                    target_domain__name=target_name)).distinct()
         elif scan_id:
             ips = IpAddress.objects.filter(
                 ip_addresses__in=Subdomain.objects.filter(
@@ -434,14 +442,32 @@ class IpAddressViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         req = self.request
         scan_id = req.query_params.get('scan_id')
+        target_id = req.query_params.get('target_id')
+        target_name = req.query_params.get('target_name')
+        port = req.query_params.get('port')
 
         if scan_id:
             self.queryset = Subdomain.objects.filter(
                 scan_history__id=scan_id).exclude(
                 ip_addresses__isnull=True).distinct()
+        elif target_id:
+            self.queryset = Subdomain.objects.filter(
+                target_domain__id=target_id).exclude(
+                ip_addresses__isnull=True).distinct()
+        elif target_name:
+            self.queryset = Subdomain.objects.filter(
+                target_domain__name=target_name).exclude(
+                ip_addresses__isnull=True).distinct()
         else:
-            self.serializer_class = IpSerializer
-            self.queryset = Ip.objects.all()
+            self.queryset = Subdomain.objects.all().exclude(
+                ip_addresses__isnull=True).distinct()
+
+        if port:
+            self.queryset = Subdomain.objects.all().exclude(
+                ip_addresses__isnull=True).filter(
+                    ip_addresses__ports__in=Port.objects.filter(
+                    number=port)).distinct()
+
         return self.queryset
 
     def paginate_queryset(self, queryset, view=None):
