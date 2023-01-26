@@ -22,6 +22,7 @@ from reNgine.celery import app
 from reNgine.common_func import *
 import logging
 from reNgine import definitions
+from django.views.decorators.csrf import csrf_exempt
 
 
 def scan_history(request):
@@ -128,7 +129,7 @@ def all_endpoints(request):
     context['scan_history_active'] = 'active'
     return render(request, 'startScan/endpoints.html', context)
 
-
+@csrf_exempt
 def start_scan_ui(request, domain_id):
     domain = get_object_or_404(Domain, id=domain_id)
     if request.method == "POST":

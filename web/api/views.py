@@ -122,7 +122,10 @@ class ListScanHistory(APIView):
 class ListEngines(APIView):
     def get(self, request, format=None):
         req = self.request
+        engineName = req.query_params.get('engine_name')
         engine = EngineType.objects.all()
+        if engineName:
+            engine = engine.filter(engine_name=engineName)
         engine_serializer = EngineSerializer(engine, many=True)
         return Response({'engines': engine_serializer.data})
 
@@ -136,7 +139,15 @@ class ListOrganizations(APIView):
 
 class ListTargets(APIView):
     def get(self, request, format=None):
+        req = self.request
+        targetId = req.query_params.get('target_id')
+        targetName = req.query_params.get('target_name')
+
         targets = Domain.objects.all()
+        if targetId:
+            targets = targets.filter(id=targetId)
+        elif targetName:
+            targets = targets.filter(name=targetName)
         targets_serializer = OrganizationTargetsSerializer(targets, many=True)
         return Response({'domains': targets_serializer.data})
 

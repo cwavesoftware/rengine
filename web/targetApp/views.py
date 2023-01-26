@@ -20,14 +20,14 @@ from startScan.models import *
 from scanEngine.models import *
 from targetApp.forms import *
 from reNgine.common_func import *
-
+from django.views.decorators.csrf import csrf_exempt
 
 
 def index(request):
     # TODO bring default target page
     return render(request, 'target/index.html')
 
-
+@csrf_exempt
 def add_target(request):
     add_target_form = AddTargetForm(request.POST or None)
     if request.method == "POST":
@@ -250,6 +250,8 @@ def target_summary(request, id):
 
     return render(request, 'target/summary.html', context)
 
+
+@csrf_exempt
 def add_organization(request):
     form = AddOrganizationForm(request.POST or None)
     if request.method == "POST":
