@@ -21,6 +21,7 @@ from recon_note.models import *
 from reNgine.common_func import is_safe_path
 from django import http
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 
 
 class VulnerabilityReport(APIView):
@@ -134,6 +135,9 @@ class ListOrganizations(APIView):
     def get(self, request, format=None):
         req = self.request
         organizations = Organization.objects.all()
+        orgName = req.query_params.get('org_name')
+        if orgName:
+            organizations = organizations.filter(name=orgName)
         organization_serializer = OrganizationSerializer(organizations, many=True)
         return Response({'organizations': organization_serializer.data})
 
@@ -1275,3 +1279,16 @@ def scanStatus(request, scanId):
         "error": "false",
         "scanStatus": scan.scan_status
     })
+
+
+class OrganizationApiView(APIView):
+    authentication_classes = []
+
+    def put(self, request, orgId):
+        organization = get_object_or_404(Organization, id=orgId)
+        targetId = request.data["targetId"]
+        target = get_object_or_404(Domain, id=targetId)
+        if targetId:
+            organization.domains.add(target)
+            organization.save()
+            return Response({"status":"success"})

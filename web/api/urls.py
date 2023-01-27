@@ -2,6 +2,7 @@ from django.conf.urls import url, include
 from django.urls import path
 from rest_framework import routers
 from .views import *
+from django.views.decorators.csrf import csrf_exempt
 
 app_name = 'api'
 router = routers.DefaultRouter()
@@ -122,6 +123,10 @@ urlpatterns = [
         'scan/status/<int:scanId>',
         scanStatus,
         name='scan_status'),
+    path(
+        'organization/<int:orgId>',
+        OrganizationApiView.as_view(),
+        name='org_update'),
 ]
 
 urlpatterns += router.urls
