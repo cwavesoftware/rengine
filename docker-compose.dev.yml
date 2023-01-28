@@ -25,6 +25,7 @@ services:
   celery:
     build:
       context: ./web
+    image: cwavesoftware/celery:latest
     restart: always
     mem_limit: "8g"
     mem_reservation: "4g"
@@ -54,7 +55,7 @@ services:
       - redis
 
   celery-beat:
-    build: ./web
+    image: cwavesoftware/celery:latest
     restart: always
     entrypoint: /usr/src/app/beat-entrypoint.sh
     command: celery -A reNgine beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
@@ -81,11 +82,9 @@ services:
       - tool_config:/root/.config
 
   web:
-    build:
-      context: ./web
+    image: cwavesoftware/celery:latest
     entrypoint: /usr/src/app/entrypoint.sh
     restart: always
-    image: cosmin91ro/rengine:latest
     mem_limit: "8g"
     mem_reservation: "4g"
     environment:
@@ -114,11 +113,11 @@ services:
       - celery
       - celery-beat
 
-  # tor:
-  #   image: peterdavehello/tor-socks-proxy
-  #   restart: always
-  #   depends_on:
-  #     - web
+  tor:
+    image: peterdavehello/tor-socks-proxy
+    restart: always
+    depends_on:
+      - web
 
 networks:
   default:
