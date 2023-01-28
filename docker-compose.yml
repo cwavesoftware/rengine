@@ -25,6 +25,7 @@ services:
   celery:
     build:
       context: ./web
+    image: cwavesoftware/celery:latest
     restart: always
     mem_limit: "8g"
     mem_reservation: "4g"
@@ -38,9 +39,8 @@ services:
       - gf_patterns:/root/.gf
       - nuclei_templates:/root/nuclei-templates
       - tool_config:/root/.config
-      - static_volume:/usr/src/app/staticfiles/
     environment:
-      - DEBUG=0
+      - DEBUG=1
       - CELERY_BROKER_URL=redis://rengine-redis:6379/0
       - CELERY_RESULT_BACKEND=redis://rengine-redis:6379/0
       - POSTGRES_DB=${POSTGRES_DB}
@@ -55,14 +55,14 @@ services:
       - redis
 
   celery-beat:
-    build: ./web
+    image: cwavesoftware/celery:latest
     restart: always
     entrypoint: /usr/src/app/beat-entrypoint.sh
     command: celery -A reNgine beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
     depends_on:
       - celery
     environment:
-      - DEBUG=0
+      - DEBUG=1
       - CELERY_BROKER_URL=redis://rengine-redis:6379/0
       - CELERY_RESULT_BACKEND=redis://rengine-redis:6379/0
       - POSTGRES_DB=${POSTGRES_DB}
@@ -82,15 +82,13 @@ services:
       - tool_config:/root/.config
 
   web:
-    build:
-      context: ./web
+    image: cwavesoftware/celery:latest
     entrypoint: /usr/src/app/entrypoint.sh
     restart: always
-    image: cosmin91ro/rengine:latest
     mem_limit: "8g"
     mem_reservation: "4g"
     environment:
-      - DEBUG=0
+      - DEBUG=1
       - CELERY_BROKER=redis://redis:6379/0
       - CELERY_BACKEND=redis://redis:6379/0
       - POSTGRES_DB=${POSTGRES_DB}
@@ -108,7 +106,8 @@ services:
       - gf_patterns:/root/.gf
       - nuclei_templates:/root/nuclei-templates
       - tool_config:/root/.config
-      - static_volume:/usr/src/app/staticfiles/
+    ports:
+      - "8000:8000"
     depends_on:
       - db
       - celery
@@ -120,31 +119,9 @@ services:
     depends_on:
       - web
 
-  proxy:
-    restart: always
-    image: nginx:alpine
-    ports:
-      - 443:443/tcp
-    depends_on:
-      - web
-      - db
-      - redis
-    secrets:
-      - source: proxy.ca
-        target: /etc/nginx/certs/rengine_chain.pem
-      - source: proxy.cert
-        target: /etc/nginx/certs/rengine.pem
-      - source: proxy.key
-        target: /etc/nginx/certs/rengine_rsa.key
-    volumes:
-      - ./config/nginx/rengine.conf:/etc/nginx/conf.d/rengine.conf:ro
-      - static_volume:/usr/src/app/staticfiles/
-      - scan_results:/usr/src/scan_results
-
 networks:
   default:
     name: renginenet
-
 volumes:
   tool_config:
   postgres_data:
@@ -153,12 +130,3 @@ volumes:
   github_repos:
   wordlist:
   scan_results:
-  static_volume:
-
-secrets:
-  proxy.ca:
-    file: ./secrets/certs/rengine_chain.pem
-  proxy.key:
-    file: ./secrets/certs/rengine_rsa.key
-  proxy.cert:
-    file: ./secrets/certs/rengine.pem
