@@ -2143,6 +2143,9 @@ def get_and_save_leaked_credentials(scan_history, results_dir):
 
     try:
         pwndb_output = subprocess.getoutput(pwndb_command)
+        if "Can't connect to service!" in pwndb_output:
+            logger.error('ERROR: pwndb: %s' % pwndb_output)  # pwndb project is archived, need to find a replacement
+            return
         creds = json.loads(pwndb_output)
 
         for cred in creds:

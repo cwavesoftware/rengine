@@ -118,6 +118,9 @@ services:
     restart: always
     depends_on:
       - web
+    ports:
+      - "9150:9150"
+    hostname: tor
 
 networks:
   default:
