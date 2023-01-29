@@ -1,38 +1,26 @@
-from distutils.log import info
 import os
-import traceback
-import slack
 import yaml
 import json
 import csv
 import validators
-import random
-import requests
 import metafinder.extractor as metadata_extractor
 from reNgine import definitions
 import whatportis
 import subprocess
 import time
-
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium import webdriver
 from emailfinder.extractor import *
 from dotted_dict import DottedDict
-from celery import shared_task
-from discord_webhook import DiscordWebhook
 from reNgine.celery import app
 from startScan.models import *
 from targetApp.models import Domain
 from scanEngine.models import EngineType
 from django.conf import settings
-from django.shortcuts import get_object_or_404
 
-from celery import shared_task
-from datetime import datetime
 from degoogle import degoogle
 
-from django.utils import timezone, dateformat
-from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 
 from reNgine.celery import app
@@ -369,7 +357,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
     # check for all the tools and add them into string
     # if tool selected is all then make string, no need for loop
     if ALL in yaml_configuration[SUBDOMAIN_DISCOVERY][USES_TOOLS]:
-        tools = 'amass-active amass-passive assetfinder sublist3r subfinder oneforall'
+        tools = 'amasspassive assetfinder sublister subfinder oneforall'
     else:
         tools = ' '.join(
             str(tool) for tool in yaml_configuration[SUBDOMAIN_DISCOVERY][USES_TOOLS])
@@ -383,6 +371,42 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
         if _threads > 0:
             threads = _threads
 
+
+    from reNgine.core.modules.subdomaindiscovery.toolRunner import ToolRunner as SubsToolRunner
+    threads = []
+    for file in os.listdir(RECON_TOOLS_DIR):
+        if os.path.isfile(f'{os.path.join(RECON_TOOLS_DIR, file)}'):
+            fileNoExt = os.path.basename(os.path.splitext(file)[0])
+            if fileNoExt not in tools:
+                continue
+            module = f'{RECON_TOOLS_DIR[RECON_TOOLS_DIR.index("reNgine"):].replace("/", ".")}.{fileNoExt}'
+            t = SubsToolRunner( module,
+                            domain.name, 
+                            results_dir,
+                            yaml_configuration[SUBDOMAIN_DISCOVERY] if SUBDOMAIN_DISCOVERY in yaml_configuration else None
+                            ) 
+            t.start()
+            threads.append(t)
+    
+    anySuccess = False
+    for t in threads:
+        print(f'joining {t.name}')
+        t.join()
+        if t.exception:
+            logger.exception(t.exception)
+        else:
+            print(f'{t.name} finished successfully')
+            anySuccess = True
+    logger.info('all subdomain discovery tool finished')
+
+    if anySuccess:
+        logger.info('we have at leat one tool successfull. running processor')
+        from reNgine.core.modules.subdomaindiscovery.processor import process as subsProcessor
+        subsProcessor(results_dir, 'all_unique.lst')
+        logger.info('subdomains processor finished')
+    else:
+        logger.warn('all tools failed')
+    '''
     if 'amass' in tools:
         if 'amass-passive' in tools:
             amass_command = 'amass enum -passive -d {} -o {}/from_amass.txt'.format(
@@ -445,8 +469,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
         os.system(subfinder_command)
 
     if 'oneforall' in tools:
-        oneforall_command = 'python3 /usr/src/github/OneForAll/oneforall.py --target {} run'.format(
-            domain.name, results_dir)
+        oneforall_command = 'python3 /usr/src/github/OneForAll/oneforall.py --target {} run'
 
         # Run OneForAll
         logger.info(oneforall_command)
@@ -459,15 +482,13 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
 
         # remove the results from oneforall directory
         # os.system('rm -rf /usr/src/github/OneForAll/results/{}.*'.format(domain.name))
-
     '''
-    All tools have gathered the list of subdomains with filename
-    initials as from_*
-    We will gather all the results in one single file, sort them and
-    remove the older results from_*
-    '''
+    # merging output files
     os.system(
-        'cat {0}/*.txt > {0}/subdomain_collection.txt'.format(results_dir))
+        '[ -f {0}/subdomaindiscovery/all_unique.lst ] && cat {0}/subdomaindiscovery/all_unique.lst > {0}/subdomain_collection.txt'.format(results_dir))
+    
+    os.system(
+        'cat {0}/from_imported.txt >> {0}/subdomain_collection.txt'.format(results_dir))
 
     '''
     Write target domain into subdomain_collection
@@ -522,6 +543,7 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
     if notification and (notification[0].send_subdomain_changes_notif or notification[0].send_removed_subdomains_notif):
         compare_with_all_scans = COMPARE_WITH in yaml_configuration[SUBDOMAIN_DISCOVERY] and yaml_configuration[SUBDOMAIN_DISCOVERY][COMPARE_WITH] == "all_scans"
         newly_added_subdomain = get_new_added_subdomain(task.id, domain.id, compare_with_all_scans)
+        logger.info(f'found {len(newly_added_subdomain)} newly added subdomains')
         threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
         if compare_with_all_scans:
             to_compare = Subdomain.objects.filter(target_domain=domain.id).distinct("name").count()
@@ -572,21 +594,26 @@ def get_last_scan_subdomains(scan_id, domain_id):
             scan_history__id=last_scan.id)
         return subdomains
 
-
 def get_new_added_subdomain(scan_id, domain_id, compare_with_all_scans=True):
     scan_history = ScanHistory.objects.filter(
         domain=domain_id).filter(
             subdomain_discovery=True).filter(
                 id__lte=scan_id)
     if scan_history.count() > 1:
-        last_scan = scan_history.order_by('-start_scan_date')[1]
         scanned_host_q1 = Subdomain.objects.filter(
             scan_history__id=scan_id).values('name')
+        logger.debug(f'scanned_host_q1: {scanned_host_q1}')
         if compare_with_all_scans:
-            scanned_host_q2 = Subdomain.objects.filter(target_domain__id=domain_id).values('name').distinct('name')
+            scanned_host_q2 = Subdomain.objects.filter(target_domain__id=domain_id) \
+                            .exclude(scan_history__id=scan_id) \
+                            .values('name').distinct('name')
         else:   
+            last_scan = scan_history.order_by('-start_scan_date')[1]
             scanned_host_q2 = Subdomain.objects.filter(scan_history__id=last_scan.id).values('name')
+        logger.debug(f'scanned_host_q2: {scanned_host_q2}')
+        
         added_subdomain = scanned_host_q1.difference(scanned_host_q2)
+        logger.debug(f'added_subdomain: {added_subdomain}')
 
         return Subdomain.objects.filter(
             scan_history=scan_id).filter(
@@ -599,12 +626,8 @@ def get_removed_subdomain(scan_id, domain_id, compare_with_all_scans=True):
                 id__lte=scan_id)
     if scan_history.count() > 1:
         last_scan = scan_history.order_by('-start_scan_date')[1]
-        scanned_host_q1 = Subdomain.objects.filter(
-            scan_history__id=scan_id).values('name')
-        if compare_with_all_scans:
-            scanned_host_q2 = Subdomain.objects.filter(target_domain__id=domain_id).values('name').distinct('name')
-        else:   
-            scanned_host_q2 = Subdomain.objects.filter(scan_history__id=last_scan.id).values('name')
+        scanned_host_q1 = Subdomain.objects.filter(scan_history__id=scan_id).values('name')
+        scanned_host_q2 = Subdomain.objects.filter(scan_history__id=last_scan.id).values('name')
         removed_subdomains = scanned_host_q2.difference(scanned_host_q1)
 
         return Subdomain.objects.filter(
@@ -625,7 +648,7 @@ def http_crawler(task, domain, results_dir, activity_id):
     alive_file_location = results_dir + '/alive.txt'
     httpx_results_file = results_dir + '/httpx.json'
 
-    subdomain_scan_results_file = results_dir + '/sorted_subdomain_collection.txt'
+    subdomain_scan_results_file = os.path.join(results_dir, 'sorted_subdomain_collection.txt')
     httpx_command = 'httpx -status-code -content-length -title -tech-detect -cdn -ip -follow-host-redirects -random-agent -silent 1>/dev/null'
 
     proxy = get_random_proxy()
@@ -636,7 +659,7 @@ def http_crawler(task, domain, results_dir, activity_id):
         httpx_results_file
     )
     httpx_command = 'cat {} | {}'.format(subdomain_scan_results_file, httpx_command)
-    logger.info(httpx_command)
+    logger.debug(httpx_command)
     os.system(httpx_command)
 
     # alive subdomains from httpx
@@ -652,10 +675,10 @@ def http_crawler(task, domain, results_dir, activity_id):
                 # fallback for older versions of httpx
                 if 'url' in json_st:
                     subdomain = Subdomain.objects.get(
-                    scan_history=task, name=json_st['input'])
+                                    scan_history=task, name=json_st['input'])
                 else:
                     subdomain = Subdomain.objects.get(
-                        scan_history=task, name=json_st['url'].split("//")[-1])
+                                    scan_history=task, name=json_st['url'].split("//")[-1])
                 '''
                 Saving Default http urls to EndPoint
                 '''
@@ -666,18 +689,18 @@ def http_crawler(task, domain, results_dir, activity_id):
                 if 'url' in json_st:
                     endpoint.http_url = json_st['url']
                     subdomain.http_url = json_st['url']
-                if 'status-code' in json_st:
-                    endpoint.http_status = json_st['status-code']
-                    subdomain.http_status = json_st['status-code']
+                if 'status_code' in json_st:
+                    endpoint.http_status = json_st['status_code']
+                    subdomain.http_status = json_st['status_code']
                 if 'title' in json_st:
                     endpoint.page_title = json_st['title']
                     subdomain.page_title = json_st['title']
-                if 'content-length' in json_st:
-                    endpoint.content_length = json_st['content-length']
-                    subdomain.content_length = json_st['content-length']
-                if 'content-type' in json_st:
-                    endpoint.content_type = json_st['content-type']
-                    subdomain.content_type = json_st['content-type']
+                if 'content_length' in json_st:
+                    endpoint.content_length = json_st['content_length']
+                    subdomain.content_length = json_st['content_length']
+                if 'content_type' in json_st:
+                    endpoint.content_type = json_st['content_type']
+                    subdomain.content_type = json_st['content_type']
                 if 'webserver' in json_st:
                     endpoint.webserver = json_st['webserver']
                     subdomain.webserver = json_st['webserver']
@@ -689,8 +712,8 @@ def http_crawler(task, domain, results_dir, activity_id):
                         response_time = response_time / 1000
                     endpoint.response_time = response_time
                     subdomain.response_time = response_time
-                if 'cnames' in json_st:
-                    cname_list = ','.join(json_st['cnames'])
+                if 'cname' in json_st:
+                    cname_list = ','.join(json_st['cname'])
                     subdomain.cname = cname_list
                 discovered_date = timezone.now()
                 endpoint.discovered_date = discovered_date
@@ -722,14 +745,14 @@ def http_crawler(task, domain, results_dir, activity_id):
                 subdomain.save()
                 endpoint.save()
             except Exception as exception:
-                logger.error(exception)
+                logger.exception(exception)
     alive_file.close()
 
     if notification and notification[0].send_scan_status_notif:
         alive_count = Subdomain.objects.filter(
-            scan_history__id=task.id).values('name').distinct().filter(
-            http_status__exact=200).count()
-        send_notification('HTTP Crawler for target {} has been completed.\n\n {} subdomains were alive (http status 200).'.format(domain.name, alive_count))
+            scan_history__id=task.id).values('name').distinct().exclude(
+            http_status__exact=0).count()
+        send_notification('HTTP Crawler for target {} has been completed.\n\n {} subdomains were alive.'.format(domain.name, alive_count))
 
 
 def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
@@ -1193,46 +1216,6 @@ def fetch_endpoints(
     '''
     Store all the endpoints and then run the httpx
     '''
-    # try:
-    #     endpoint_final_url = results_dir + '/all_urls.txt'
-    #     if os.path.isfile(endpoint_final_url):
-    #         with open(endpoint_final_url) as endpoint_list:
-    #             for url in endpoint_list:
-    #                 http_url = url.rstrip('\n')
-    #                 if not EndPoint.objects.filter(scan_history=task, http_url=http_url).exists():
-    #                     _subdomain = get_subdomain_from_url(http_url)
-    #                     if Subdomain.objects.filter(
-    #                             scan_history=task).filter(
-    #                             name=_subdomain).exists():
-    #                         subdomain = Subdomain.objects.get(
-    #                             scan_history=task, name=_subdomain)
-    #                     else:
-    #                         '''
-    #                         gau or gosppider can gather interesting endpoints which
-    #                         when parsed can give subdomains that were not existent from
-    #                         subdomain scan. so storing them
-    #                         '''
-    #                         logger.warning(
-    #                             'Subdomain {} not found, adding...'.format(_subdomain))
-    #                         subdomain_dict = DottedDict({
-    #                             'scan_history': task,
-    #                             'target_domain': domain,
-    #                             'name': _subdomain,
-    #                         })
-    #                         subdomain = save_subdomain(subdomain_dict)
-    #                     endpoint_dict = DottedDict({
-    #                         'scan_history': task,
-    #                         'target_domain': domain,
-    #                         'subdomain': subdomain,
-    #                         'http_url': http_url,
-    #                     })
-    #                     save_endpoint(endpoint_dict)
-    # except Exception as e:
-    #     logger.error(e)
-
-    # if notification and notification[0].send_scan_output_file:
-    #     send_files_to_discord(results_dir + '/all_urls.txt')
-
     logger.info('HTTP Probing on collected endpoints')
 
     httpx_command = 'httpx -l {0}/all_urls.txt -status-code -content-length -ip -cdn -title -tech-detect -json -follow-redirects -random-agent -o {0}/final_httpx_urls.json -silent 1>/dev/null'.format(results_dir)
