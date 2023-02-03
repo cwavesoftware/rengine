@@ -50,6 +50,7 @@ services:
       - POSTGRES_HOST=${POSTGRES_HOST}
       - SLACK_USER=${SLACK_USER?SLACK_USER_NOT_DEFINED}
       - SLACK_TOKEN=${SLACK_TOKEN?SLACK_TOKEN_NOT_DEFINED}
+      - TZ=${TIMEZONE?TIMEZONE_NOT_DEFINED}
     depends_on:
       - db
       - redis
@@ -72,6 +73,7 @@ services:
       - POSTGRES_HOST=${POSTGRES_HOST}
       - SLACK_USER=${SLACK_USER?SLACK_USER_NOT_DEFINED}
       - SLACK_TOKEN=${SLACK_TOKEN?SLACK_TOKEN_NOT_DEFINED}
+      - TZ=${TIMEZONE?TIMEZONE_NOT_DEFINED}
     volumes:
       - ./web:/usr/src/app
       - github_repos:/usr/src/github
@@ -98,6 +100,7 @@ services:
       - POSTGRES_HOST=${POSTGRES_HOST}
       - SLACK_USER=${SLACK_USER?SLACK_USER_NOT_DEFINED}
       - SLACK_TOKEN=${SLACK_TOKEN?SLACK_TOKEN_NOT_DEFINED}
+      - TZ=${TIMEZONE?TIMEZONE_NOT_DEFINED}
     volumes:
       - ./web:/usr/src/app
       - github_repos:/usr/src/github
