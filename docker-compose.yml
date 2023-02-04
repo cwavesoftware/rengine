@@ -54,6 +54,10 @@ services:
     depends_on:
       - db
       - redis
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   celery-beat:
     image: cwavesoftware/celery:latest
