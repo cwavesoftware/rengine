@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import subprocess
 import os
-import shlex
+from reNgine.definitions import *
 
 
-def run(domainName, resultsDir):
+def run(domainName, resultsDir, yaml_configuration):
     outDir = os.path.join(resultsDir, 'subdomaindiscovery')
     try:
         os.makedirs(outDir)

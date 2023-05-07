@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 import subprocess
 import os
-import shlex
+from reNgine.definitions import *
 
 
-def run(domainName, resultsDir):
+
+def run(domainName, resultsDir, yaml_configuration):
     outDir = os.path.join(resultsDir, 'subdomaindiscovery')
     try:
         os.makedirs(outDir)
     except FileExistsError:
         pass
     outFile = f'{os.path.join(outDir, os.path.basename(os.path.splitext(__file__)[0]))}.out'
-    command = f'subfinder -d {domainName} -t {10} -o {outFile}'
+    threads = yaml_configuration[THREADS] if yaml_configuration[THREADS] else 10
+    command = f'subfinder -d {domainName} -t {threads} -o {outFile}'
     command += ' -config /root/.config/subfinder/config.yaml'
 
     print(f'running {command} ...\n')
