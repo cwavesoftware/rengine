@@ -60,3 +60,5 @@ get-docker.sh
 automation/included_subdomains.txt
 cookiejar
 scan_results
+zones.lst
+subdomains.txt
