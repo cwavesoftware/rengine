@@ -26,7 +26,8 @@ Dashboard             |  Scan Results
 * [Features](#features)
 * [Documentation](#documentation)
 * [Screenshots](#screenshots)
-* [Quick Installation](#quick-installation)
+* [Prerequisites](#presequisites)
+* [Installation](#installation)
 * [Related Projects](#related-projects)
 * [Support and Sponsor](#support-and-sponsoring)
 * [Acknowledgements & Credits](#acknowledgements-and-credits)
@@ -124,9 +125,11 @@ The core features of reNgine are documented in the author's [original docs](http
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/aqua.png)  
 
-## Quick Installation
+## Presequisites
+* [docker](https://docs.docker.com/get-docker/)
+* [docker-compose](https://github.com/docker/compose)
 
-**(Only Ubuntu/VPS)**
+## Installation
 
 1. Clone this repo
 
@@ -140,19 +143,18 @@ git clone https://github.com/cwavesoftware/rengine && cd rengine
 vim .env
 ```
 
-3. Run the installation script, Please keep an eye for any prompt, you will also be asked for username and password for reNgine.
+3. Start the services
 
 ```
-sudo ./install.sh
+docker-compose up -d
 ```
 
-if `./install.sh` does not have install permission, please change it, `chmod +x install.sh`
+4. Create user
+```
+docker-compose exec web python3 manage.py createsuperuser
+```
 
 **reNgine can now be accessed from https://127.0.0.1 or if you're on the VPS https://your_vps_ip_address**
-
-## Installation (Mac/Windows/Other)
-
-Installation instructions can be found at [https://reNgine.wiki](https://reNgine.wiki)
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/aqua.png)
 
