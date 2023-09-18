@@ -134,6 +134,6 @@ RUN mkdir /usr/src/scan_results
 WORKDIR /usr/src/app
 
 # Copy source code
-COPY . /usr/src/app/
+COPY ./tools /usr/src/app/tools
 
 RUN chmod +x /usr/src/app/tools/get_urls.sh

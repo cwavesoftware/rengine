@@ -823,9 +823,9 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
             threshold = yaml_configuration[VISUAL_IDENTIFICATION][SCREENSHOT_COMPARISON_THRESHOLD]
 
         skip_these = []
-        if SCREENSHOT_SKIP_THESE in yaml_configuration:
+        if SCREENSHOT_SKIP_THESE in yaml_configuration[VISUAL_IDENTIFICATION]:
             try:
-                skip_these = yaml_configuration[SCREENSHOT_SKIP_THESE].split(',')
+                skip_these = yaml_configuration[VISUAL_IDENTIFICATION][SCREENSHOT_SKIP_THESE].split(',')
                 logger.info(f'whitelisted domains: {",".join(skip_these)}')
             except Exception as ex:
                 logger.error(ex)
