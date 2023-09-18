@@ -826,6 +826,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         if SCREENSHOT_SKIP_THESE in yaml_configuration:
             try:
                 skip_these = yaml_configuration[SCREENSHOT_SKIP_THESE].split(',')
+                logger.info(f'whitelisted domains: {",".join(skip_these)}')
             except:
                 pass
 
@@ -837,6 +838,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         for d1 in currentScanDomains:
             toAdd = False
             if d1.name in skip_these:
+                logger.info(f'skipping {d1.name}')
                 continue
             for d2 in prevDomainsWithScreens:
                 if d1.name == d2.name:
