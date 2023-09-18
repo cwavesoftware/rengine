@@ -822,12 +822,22 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         and yaml_configuration[VISUAL_IDENTIFICATION][SCREENSHOT_COMPARISON_THRESHOLD] > 0:
             threshold = yaml_configuration[VISUAL_IDENTIFICATION][SCREENSHOT_COMPARISON_THRESHOLD]
 
+        skip_these = []
+        if SCREENSHOT_SKIP_THESE in yaml_configuration:
+            try:
+                skip_these = yaml_configuration[SCREENSHOT_SKIP_THESE].split(',')
+            except:
+                pass
+
+
         notification = Notification.objects.all()
         if notification and notification[0].send_visual_changes_to_slack:
             existingFiles = getFiles()
 
         for d1 in currentScanDomains:
             toAdd = False
+            if d1.name in skip_these:
+                continue
             for d2 in prevDomainsWithScreens:
                 if d1.name == d2.name:
                     toAdd = compareImages(d1.screenshot_path, d2.screenshot_path, threshold)

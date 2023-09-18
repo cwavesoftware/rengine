@@ -58,6 +58,7 @@ USE_NUCLEI_CONFIG = 'use_nuclei_config'
 USE_NAABU_CONFIG = 'use_naabu_config'
 VALIDATE_SUBDOMAINS = 'validate_subdomains'
 FILTER_STATUS_CODE = 'filter_status_code'
+SCREENSHOT_SKIP_THESE = 'skip_these'
 
 ###############################################################################
 # Wordlist DEFINITIONS
