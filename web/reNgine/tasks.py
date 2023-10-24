@@ -1484,8 +1484,8 @@ def vulnerability_scan(
     else:
         severity = "critical, high, medium, low, info"
 
-    # update nuclei templates before running scan
-    os.system('nuclei -update-templates')
+    # update nuclei before running scan
+    os.system('nuclei -update; nuclei -update-templates')
 
     for _severity in severity.split(","):
         # delete any existing vulnerability.json file
