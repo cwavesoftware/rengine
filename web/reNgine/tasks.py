@@ -1413,7 +1413,7 @@ def vulnerability_scan(
 
     vulnerability_scan_input_file = results_dir + urls_path
 
-    nuclei_command = 'nuclei -json -l {} -o {}'.format(
+    nuclei_command = 'nuclei -l {} -o {}'.format(
         vulnerability_scan_input_file, vulnerability_result_path)
 
     # check nuclei config
