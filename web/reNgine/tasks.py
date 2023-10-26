@@ -1403,7 +1403,7 @@ def vulnerability_scan(
     urls_path = '/alive.txt'
     if task.scan_type.fetch_url:
         # os.system('cat {0}/all_urls.txt | grep -Eiv "\\.(eot|jpg|jpeg|gif|css|tif|tiff|png|ttf|otf|woff|woff2|ico|pdf|svg|txt|js|doc|docx)$" | unfurl -u format %s://%d%p >> {0}/unfurl_urls.txt'.format(results_dir))
-        os.system('cat {0}/final_httpx_urls.json | jq ".url" | sed "s/\\\"//g" | grep -Eiv "\\.(eot|jpg|jpeg|gif|css|tif|tiff|png|ttf|otf|woff|woff2|ico|pdf|svg|txt|js|doc|docx)$" | unfurl -u format %s://%d%p >> {0}/unfurl_urls.txt'.format(results_dir))
+        os.system('cat {0}/final_httpx_urls.json | jq ".url" | sed "s/\\\"//g" | grep -Eiv "\\.(eot|jpg|jpeg|gif|css|tif|tiff|png|ttf|otf|woff|woff2|ico|pdf|svg|txt|js|doc|docx)$" | unfurl -u format %s://%d >> {0}/unfurl_urls.txt'.format(results_dir))
 
         os.system(
             'sort -u {0}/unfurl_urls.txt -o {0}/unfurl_urls.txt'.format(results_dir))
