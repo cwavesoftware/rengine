@@ -522,36 +522,37 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
     if notification and (notification[0].send_subdomain_changes_notif or notification[0].send_removed_subdomains_notif):
         compare_with_all_scans = COMPARE_WITH in yaml_configuration[SUBDOMAIN_DISCOVERY] and yaml_configuration[SUBDOMAIN_DISCOVERY][COMPARE_WITH] == "all_scans"
         newly_added_subdomain = get_new_added_subdomain(task.id, domain.id, compare_with_all_scans)
-        threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
-        if compare_with_all_scans:
-            to_compare = Subdomain.objects.filter(target_domain=domain.id).distinct("name").count()
-            logger.info(f"comparing with all previous scans. subdomains: {to_compare}")
-        else:
-            last_scan_subdomains = get_last_scan_subdomains(task.id, domain.id)
-            to_compare = last_scan_subdomains.count() if last_scan_subdomains else 0  # Will not send notif on the first subdomain scan
-            logger.info(f"comparing with last scan. subdomains: {to_compare}")
-        logger.info(f"Threshold = {threshold}. Comparing with {newly_added_subdomain.count()} new subdomains found")
-
-        if newly_added_subdomain and notification[0].send_subdomain_changes_notif:
-            if (newly_added_subdomain.count()) < (to_compare * threshold) / 100:
-                message = "**{} New Subdomains Discovered on domain {}**".format(newly_added_subdomain.count(), domain.name)
-                for subdomain in newly_added_subdomain:
-                    message += "\n• {}".format(subdomain.name)
+        if newly_added_subdomain:
+            threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
+            if compare_with_all_scans:
+                to_compare = Subdomain.objects.filter(target_domain=domain.id).distinct("name").count()
+                logger.info(f"comparing with all previous scans. subdomains: {to_compare}")
             else:
-                message = f"New subdomains discovered on {domain.name} exceeds notification threshold. Something is wrong, check the subdomain discovery tools"
-                logger.info(message)
-            send_notification(message)
+                last_scan_subdomains = get_last_scan_subdomains(task.id, domain.id)
+                to_compare = last_scan_subdomains.count() if last_scan_subdomains else 0  # Will not send notif on the first subdomain scan
+                logger.info(f"comparing with last scan. subdomains: {to_compare}")
+            logger.info(f"Threshold = {threshold}. Comparing with {newly_added_subdomain.count()} new subdomains found")
 
-        removed_subdomain = get_removed_subdomain(task.id, domain.id, compare_with_all_scans)
-        if removed_subdomain and notification[0].send_removed_subdomains_notif:
-            if (removed_subdomain.count()) < (to_compare * threshold) / 100:
-                message = "**{} Subdomains are no longer available on domain {}**".format(removed_subdomain.count(), domain.name)
-                for subdomain in removed_subdomain:
-                    message += "\n• {}".format(subdomain.name)
-            else:
-                message = f"Removed subdomains from {domain.name} exceeds notification threshold. Something is wrong, check the subdomain discovery tools"
-                logger.info(message)
-            send_notification(message)
+            if newly_added_subdomain and notification[0].send_subdomain_changes_notif:
+                if (newly_added_subdomain.count()) < (to_compare * threshold) / 100:
+                    message = "**{} New Subdomains Discovered on domain {}**".format(newly_added_subdomain.count(), domain.name)
+                    for subdomain in newly_added_subdomain:
+                        message += "\n• {}".format(subdomain.name)
+                else:
+                    message = f"New subdomains discovered on {domain.name} exceeds notification threshold. Something is wrong, check the subdomain discovery tools"
+                    logger.info(message)
+                send_notification(message)
+
+            removed_subdomain = get_removed_subdomain(task.id, domain.id, compare_with_all_scans)
+            if removed_subdomain and notification[0].send_removed_subdomains_notif:
+                if (removed_subdomain.count()) < (to_compare * threshold) / 100:
+                    message = "**{} Subdomains are no longer available on domain {}**".format(removed_subdomain.count(), domain.name)
+                    for subdomain in removed_subdomain:
+                        message += "\n• {}".format(subdomain.name)
+                else:
+                    message = f"Removed subdomains from {domain.name} exceeds notification threshold. Something is wrong, check the subdomain discovery tools"
+                    logger.info(message)
+                send_notification(message)
 
     # check for interesting subdomains and send notif if any
     if notification and notification[0].send_interesting_notif:
@@ -597,8 +598,8 @@ def get_new_added_subdomain(current_scan_id, domain_id, compare_with_all_scans=T
             scan_history=current_scan_id).filter(
                 name__in=added_subdomain)
     else:
-        logger.info(f"nothing to compare with")
-        return []
+        logger.info(f"no scan history")
+
     
 
 def get_removed_subdomain(scan_id, domain_id, compare_with_all_scans=True):
