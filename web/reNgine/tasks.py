@@ -580,7 +580,7 @@ def get_new_added_subdomain(current_scan_id, domain_id, compare_with_all_scans=T
         domain=domain_id).filter(
             subdomain_discovery=True).filter(
                 id__lte=current_scan_id)
-    logger.info(f"found {scan_history.count()} previous scans")
+    logger.info(f"found {scan_history.count()} previous scans, including this one")
     if scan_history.count() > 1:
         previous_scan = scan_history.order_by('-start_scan_date')[1]
         logger.info(f"previous scan ID: {previous_scan.id}")
@@ -596,6 +596,9 @@ def get_new_added_subdomain(current_scan_id, domain_id, compare_with_all_scans=T
         return Subdomain.objects.filter(
             scan_history=current_scan_id).filter(
                 name__in=added_subdomain)
+    else:
+        logger.info(f"nothing to compare with")
+        return []
     
 
 def get_removed_subdomain(scan_id, domain_id, compare_with_all_scans=True):
