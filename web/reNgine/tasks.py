@@ -522,6 +522,10 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
     if notification and (notification[0].send_subdomain_changes_notif or notification[0].send_removed_subdomains_notif):
         compare_with_all_scans = COMPARE_WITH in yaml_configuration[SUBDOMAIN_DISCOVERY] and yaml_configuration[SUBDOMAIN_DISCOVERY][COMPARE_WITH] == "all_scans"
         newly_added_subdomain = get_new_added_subdomain(task.id, domain.id, compare_with_all_scans)
+        absolute_threshold = -1
+        if ABSOLUTE_THRESHOLD in yaml_configuration[SUBDOMAIN_DISCOVERY]:
+            absolute_threshold = yaml_configuration[SUBDOMAIN_DISCOVERY][ABSOLUTE_THRESHOLD]
+        
         if newly_added_subdomain:
             threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
             if compare_with_all_scans:
@@ -533,8 +537,8 @@ def subdomain_scan(task, domain, yaml_configuration, results_dir, activity_id, o
                 logger.info(f"comparing with last scan. subdomains: {to_compare}")
             logger.info(f"Threshold = {threshold}. Comparing with {newly_added_subdomain.count()} new subdomains found")
 
-            if newly_added_subdomain and notification[0].send_subdomain_changes_notif:
-                if (newly_added_subdomain.count()) < (to_compare * threshold) / 100:
+            if notification[0].send_subdomain_changes_notif:
+                if ((newly_added_subdomain.count()) < (to_compare * threshold) / 100) or (newly_added_subdomain.count() < absolute_threshold):
                     message = "**{} New Subdomains Discovered on domain {}**".format(newly_added_subdomain.count(), domain.name)
                     for subdomain in newly_added_subdomain:
                         message += "\n• {}".format(subdomain.name)
