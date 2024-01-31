@@ -846,9 +846,6 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
 
 
         notification = Notification.objects.all()
-        if notification and notification[0].send_visual_changes_to_slack:
-            existingFiles = getFiles()
-
         for d1 in currentScanDomains:
             toAdd = False
             if d1.name in skip_these:
@@ -859,39 +856,9 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                     toAdd = compareImages(d1.screenshot_path, d2.screenshot_path, threshold)
                     break
             if toAdd:
-                if notification[0].send_visual_changes_to_slack:
-                    if not d1.screenshot_public_url or d1.screenshot_public_url == '':
-                        fpath = os.path.join(
-                                    '/usr/src/scan_results',
-                                    d1.screenshot_path
-                                )
-                        fname = d1.screenshot_path.split('/')[0] + '_' + d1.screenshot_path.split('/')[-1]
-                        current_img = uploadAndPublish(fpath, fname, existingFiles)
-                        if not current_img:
-                            logger.error(f'Could not uploadAndPublish for subdomain id {d1.id}')
-                        if current_img:
-                            d1.screenshot_public_url = current_img
-                            d1.save()
-                            logger.info(f'screenshot_public_url for subdomain id {d1.id} updated in the database')
-
-                    if not d2.screenshot_public_url or d2.screenshot_public_url == '':
-                        fpath = os.path.join(
-                                    '/usr/src/scan_results',
-                                    d2.screenshot_path
-                                )
-                        fname = d2.screenshot_path.split('/')[0] + '_' + d2.screenshot_path.split('/')[-1]
-                        prev_img = uploadAndPublish(fpath, fname, existingFiles)
-                        if not prev_img:
-                            logger.error('Could not uploadAndPublish for subdomain id {d2.id}')
-                        if prev_img:
-                            d2.screenshot_public_url = prev_img
-                            d2.save()
-                            logger.info(f'screenshot_public_url for subdomain id {d2.id} updated in the database')
-
-
                 newDomainsWithScreens.append(
-                    {"current":{"subdomain":d1.name, "date":d1.discovered_date, "img": d1.screenshot_public_url},
-                    "prev":{"subdomain":d2.name, "date":d2.discovered_date,  "img": d2.screenshot_public_url}})
+                    {"current":{"subdomain":d1.name, "date":d1.discovered_date, "img": f"{RENGINE_URL}/media/{d1.screenshot_path}"},
+                    "prev":{"subdomain":d2.name, "date":d2.discovered_date,  "img": f"{RENGINE_URL}/media/{d2.screenshot_path}"}})
 
         logger.debug(f"New domains have screenshots: {newDomainsWithScreens}")
         

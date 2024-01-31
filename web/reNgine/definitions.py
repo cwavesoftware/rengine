@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import logging
-
+import os
 ###############################################################################
 # TOOLS DEFINITIONS
 ###############################################################################
@@ -192,3 +192,5 @@ SCAN_ACTIVITY_STATUS_FAILED = 0
 SCAN_ACTIVITY_STATUS_IN_PROGRESS = 1
 SCAN_ACTIVITY_STATUS_COMPLETED = 2
 SCAN_ACTIVITY_STATUS_ABORTED = 3
+
+RENGINE_URL= os.environ['RENGINE_URL']
