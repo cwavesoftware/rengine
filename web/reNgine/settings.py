@@ -145,7 +145,7 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 100000000
 FILE_UPLOAD_PERMISSIONS = 0o644
 
 STATIC_URL = '/staticfiles/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = '/usr/src/staticfiles'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),

@@ -39,8 +39,9 @@ services:
       - gf_patterns:/root/.gf
       - nuclei_templates:/root/nuclei-templates
       - tool_config:/root/.config
+      - /var/www/html/rengine/staticfiles:/usr/src/staticfiles
     environment:
-      - DEBUG=1
+      - DEBUG=0
       - CELERY_BROKER_URL=redis://rengine-redis:6379/0
       - CELERY_RESULT_BACKEND=redis://rengine-redis:6379/0
       - POSTGRES_DB=${POSTGRES_DB}
@@ -68,7 +69,7 @@ services:
     depends_on:
       - celery
     environment:
-      - DEBUG=1
+      - DEBUG=0
       - CELERY_BROKER_URL=redis://rengine-redis:6379/0
       - CELERY_RESULT_BACKEND=redis://rengine-redis:6379/0
       - POSTGRES_DB=${POSTGRES_DB}
@@ -88,6 +89,7 @@ services:
       - gf_patterns:/root/.gf
       - nuclei_templates:/root/nuclei-templates
       - tool_config:/root/.config
+      - /var/www/html/rengine/staticfiles:/usr/src/staticfiles
 
   web:
     image: cwavesoftware/celery:latest
@@ -96,7 +98,7 @@ services:
     mem_limit: "8g"
     mem_reservation: "4g"
     environment:
-      - DEBUG=1
+      - DEBUG=0
       - CELERY_BROKER=redis://redis:6379/0
       - CELERY_BACKEND=redis://redis:6379/0
       - POSTGRES_DB=${POSTGRES_DB}
@@ -117,6 +119,7 @@ services:
       - gf_patterns:/root/.gf
       - nuclei_templates:/root/nuclei-templates
       - tool_config:/root/.config
+      - /var/www/html/rengine/staticfiles:/usr/src/staticfiles
     ports:
       - "8000:8000"
     depends_on:
@@ -124,14 +127,14 @@ services:
       - celery
       - celery-beat
 
-  tor:
-    image: peterdavehello/tor-socks-proxy
-    restart: always
-    depends_on:
-      - web
-    ports:
-      - "9150:9150"
-    hostname: tor
+  # tor:
+  #   image: peterdavehello/tor-socks-proxy
+  #   restart: always
+  #   depends_on:
+  #     - web
+  #   ports:
+  #     - "9150:9150"
+  #   hostname: tor
 
 networks:
   default:
