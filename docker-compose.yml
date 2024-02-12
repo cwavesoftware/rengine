@@ -35,7 +35,7 @@ services:
       - ./web:/usr/src/app
       - github_repos:/usr/src/github
       - wordlist:/usr/src/wordlist
-      - /var/www/html/media:/usr/src/scan_results
+      - /var/www/html/rengine/media:/usr/src/scan_results
       - gf_patterns:/root/.gf
       - nuclei_templates:/root/nuclei-templates
       - tool_config:/root/.config
@@ -85,7 +85,7 @@ services:
       - ./web:/usr/src/app
       - github_repos:/usr/src/github
       - wordlist:/usr/src/wordlist
-      - /var/www/html/media:/usr/src/scan_results
+      - /var/www/html/rengine/media:/usr/src/scan_results
       - gf_patterns:/root/.gf
       - nuclei_templates:/root/nuclei-templates
       - tool_config:/root/.config
@@ -115,7 +115,7 @@ services:
       - ./web:/usr/src/app
       - github_repos:/usr/src/github
       - wordlist:/usr/src/wordlist
-      - /var/www/html/media:/usr/src/scan_results
+      - /var/www/html/rengine/media:/usr/src/scan_results
       - gf_patterns:/root/.gf
       - nuclei_templates:/root/nuclei-templates
       - tool_config:/root/.config
