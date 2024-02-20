@@ -823,8 +823,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         currentScanId = task.id
         logger.info(f"Comparing current scan's screenshots with the last screenshot found in any previous scan")
         
-        prevDomainsWithScreens = Subdomain.objects.exclude(scan_history__id=currentScanId).exclude(
-                    screenshot_path__isnull=True).order_by('-id')
+        prevDomains = Subdomain.objects.exclude(scan_history__id=currentScanId).order_by('-id')
         currentScanDomains = Subdomain.objects.filter(
                     scan_history__id=currentScanId).exclude(
                     screenshot_path__isnull=True)
@@ -851,7 +850,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
             if d1.name in skip_these:
                 logger.info(f'skipping {d1.name}')
                 continue
-            for d2 in prevDomainsWithScreens:
+            for d2 in prevDomains:
                 if d1.name == d2.name:
                     toAdd = compareImages(d1.screenshot_path, d2.screenshot_path, threshold)
                     break
@@ -865,7 +864,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         threshold = notification[0].notif_threshold if notification[0].notif_threshold else 100
         
         if newDomainsWithScreens and notification and notification[0].send_visual_changes_notif:
-            if len(newDomainsWithScreens) < (prevDomainsWithScreens.count() * threshold) / 100:
+            if len(newDomainsWithScreens) < (prevDomains.count() * threshold) / 100:
                 header = "**{} Subdomains have significant visual changes on {}**".format(len(newDomainsWithScreens), domain.name)
                 message = ""
                 messages_with_img = []                
@@ -909,6 +908,8 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
 
 
 def compareImages(imgPath1, imgPath2, threshold=50):
+    if not imgPath2 or imgPath2 == "":
+        return True
     idiffArgs = ["-failpercent", f"{threshold}", "-warnpercent", f"{threshold}", f"{imgPath1}", f"{imgPath2}"]
     logger.info(f"idiff {' '.join(idiffArgs)}")
     try:
