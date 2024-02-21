@@ -908,8 +908,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
 
 
 def compareImages(imgPath1, imgPath2, threshold=50):
-    if not imgPath2 or imgPath2 == "":
-        return True
+    if not imgPath2 or imgPath2 == ""
     idiffArgs = ["-failpercent", f"{threshold}", "-warnpercent", f"{threshold}", f"{imgPath1}", f"{imgPath2}"]
     logger.info(f"idiff {' '.join(idiffArgs)}")
     try:
