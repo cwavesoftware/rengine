@@ -41,7 +41,7 @@ services:
       - tool_config:/root/.config
       - /var/www/html/rengine/staticfiles:/usr/src/staticfiles
     environment:
-      - DEBUG=0
+      - DEBUG=${DEBUG?DEBUG_NOT_DEFINED}
       - CELERY_BROKER_URL=redis://rengine-redis:6379/0
       - CELERY_RESULT_BACKEND=redis://rengine-redis:6379/0
       - POSTGRES_DB=${POSTGRES_DB}
@@ -69,7 +69,7 @@ services:
     depends_on:
       - celery
     environment:
-      - DEBUG=0
+      - DEBUG=${DEBUG?DEBUG_NOT_DEFINED}
       - CELERY_BROKER_URL=redis://rengine-redis:6379/0
       - CELERY_RESULT_BACKEND=redis://rengine-redis:6379/0
       - POSTGRES_DB=${POSTGRES_DB}
@@ -98,7 +98,7 @@ services:
     mem_limit: "8g"
     mem_reservation: "4g"
     environment:
-      - DEBUG=0
+      - DEBUG=${DEBUG?DEBUG_NOT_DEFINED}
       - CELERY_BROKER=redis://redis:6379/0
       - CELERY_BACKEND=redis://redis:6379/0
       - POSTGRES_DB=${POSTGRES_DB}

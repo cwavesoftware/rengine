@@ -47,17 +47,27 @@ RUN apt update -y && apt install -y --no-install-recommends \
     openimageio-tools \
     jq
 
-# Download and install go 1.18
-RUN wget https://golang.org/dl/go1.19.5.linux-amd64.tar.gz
-RUN tar -xvf go1.19.5.linux-amd64.tar.gz
-RUN rm go1.19.5.linux-amd64.tar.gz
-RUN mv go /usr/local
+RUN if [ "$(arch)" = "aarch64" ]; then \
+      GO_VERSION=1.22.0.linux-arm64; \
+    else \
+      GO_VERSION=1.22.0.linux-amd64; \
+    fi \
+    && wget https://golang.org/dl/go${GO_VERSION}.tar.gz \
+    && tar -xvf go${GO_VERSION}.tar.gz \
+    && rm go${GO_VERSION}.tar.gz \
+    && mv go /usr/local
 
 # Download geckodriver
-RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz
-RUN tar -xvf geckodriver-v0.26.0-linux64.tar.gz
-RUN rm geckodriver-v0.26.0-linux64.tar.gz
-RUN mv geckodriver /usr/bin
+RUN GK_VERSION=0.34.0 \
+    ;if [ "$(arch)" = "aarch64" ]; then \
+      GK_ARCH=linux-aarch64; \
+    else \
+      GK_ARCH=linux64; \
+    fi \
+    ; wget https://github.com/mozilla/geckodriver/releases/download/v${GK_VERSION}/geckodriver-v${GK_VERSION}-${GK_ARCH}.tar.gz \
+    ; tar -xvf geckodriver-v${GK_VERSION}-${GK_ARCH}.tar.gz \
+    ; rm geckodriver-v${GK_VERSION}-${GK_ARCH}.tar.gz \
+    ; mv geckodriver /usr/bin
 
 # ENV for Go
 ENV GOROOT="/usr/local/go"
@@ -78,8 +88,7 @@ ENV PYTHONUNBUFFERED 1
 RUN go install -v github.com/tomnomnom/assetfinder@latest
 RUN go install -v github.com/hakluke/hakrawler@latest
 
-RUN GO111MODULE=on go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
-
+RUN go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
 RUN GO111MODULE=on go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
 RUN GO111MODULE=on go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
 RUN GO111MODULE=on go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
@@ -88,7 +97,7 @@ RUN GO111MODULE=on go install -v -v github.com/bp0lr/gauplus@latest
 RUN GO111MODULE=on go install -v github.com/tomnomnom/waybackurls@latest
 RUN GO111MODULE=on go install -v github.com/jaeles-project/gospider@latest
 RUN GO111MODULE=on go install -v github.com/tomnomnom/gf@latest
-RUN go install -v github.com/OWASP/Amass/v3/...@latest
+RUN go install -v github.com/owasp-amass/amass/v3/...@master
 
 # Update Nuclei and Nuclei-Templates
 RUN nuclei -update

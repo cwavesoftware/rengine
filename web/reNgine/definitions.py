@@ -5,88 +5,91 @@ import os
 # TOOLS DEFINITIONS
 ###############################################################################
 
-NUCLEI_TEMPLATES_PATH = '/root/nuclei-templates/'
+NUCLEI_TEMPLATES_PATH = "/root/nuclei-templates/"
 ###############################################################################
 # YAML CONFIG DEFINITIONS
 ###############################################################################
 
-ALL = 'all'
+ALL = "all"
 
-SUBDOMAIN_DISCOVERY = 'subdomain_discovery'
-PORT_SCAN = 'port_scan'
-EYEWITNESS = 'eyewitness'
-VISUAL_IDENTIFICATION = 'visual_identification'
-SCREENSHOT_COMPARISON_THRESHOLD = 'comparison_threshold'
-DIR_FILE_SEARCH = 'dir_file_search'
-FETCH_URL = 'fetch_url'
-INTENSITY = 'intensity'
-USES_TOOLS = 'uses_tools'
-COMPARE_WITH = 'compare_with'
-THREADS = 'threads'
-DELAY = 'delay'
-AMASS_WORDLIST = 'amass_wordlist'
-NAABU_RATE = 'rate'
-PORT = 'port'
-PORTS = 'ports'
-EXCLUDE_PORTS = 'exclude_ports'
-EXTENSIONS = 'extensions'
-EXCLUDE_EXTENSIONS = 'exclude_extensions'
-RECURSIVE = 'recursive'
-RECURSIVE_LEVEL = 'recursive_level'
-WORDLIST = 'wordlist'
-TIMEOUT = 'timeout'
-SCREENSHOT_TIMEOUT = 'screenshot_timeout'
-SCAN_TIMEOUT = 'scan_timeout'
-EXCLUDED_SUBDOMAINS = 'excluded_subdomains'
-EXCLUDE_TEXT = 'exclude_text'
-IGNORE_FILE_EXTENSION = 'ignore_file_extension'
-GF_PATTERNS = 'gf_patterns'
-VULNERABILITY_SCAN = 'vulnerability_scan'
-CUSTOM_NUCLEI_TEMPLATE = 'custom_templates'
-NUCLEI_TEMPLATE = 'templates'
-NUCLEI_SEVERITY = 'severity'
-NUCLEI_CONCURRENCY = 'concurrency'
-RATE_LIMIT = 'rate_limit'
-RETRIES = 'retries'
-OSINT = 'osint'
-OSINT_DOCUMENTS_LIMIT = 'documents_limit'
-OSINT_DISCOVER = 'discover'
-OSINT_DORK = 'dork'
-USE_AMASS_CONFIG = 'use_amass_config'
-USE_SUBFINDER_CONFIG = 'use_subfinder_config'
-USE_NUCLEI_CONFIG = 'use_nuclei_config'
-USE_NAABU_CONFIG = 'use_naabu_config'
-VALIDATE_SUBDOMAINS = 'validate_subdomains'
-FILTER_STATUS_CODE = 'filter_status_code'
-SCREENSHOT_SKIP_THESE = 'skip_these'
-ABSOLUTE_THRESHOLD = 'absolute_threshold'
+SUBDOMAIN_DISCOVERY = "subdomain_discovery"
+PORT_SCAN = "port_scan"
+EYEWITNESS = "eyewitness"
+VISUAL_IDENTIFICATION = "visual_identification"
+SCREENSHOT_COMPARISON_THRESHOLD = "comparison_threshold"
+DIR_FILE_SEARCH = "dir_file_search"
+FETCH_URL = "fetch_url"
+INTENSITY = "intensity"
+USES_TOOLS = "uses_tools"
+COMPARE_WITH = "compare_with"
+THREADS = "threads"
+DELAY = "delay"
+AMASS_WORDLIST = "amass_wordlist"
+NAABU_RATE = "rate"
+PORT = "port"
+PORTS = "ports"
+EXCLUDE_PORTS = "exclude_ports"
+EXTENSIONS = "extensions"
+EXCLUDE_EXTENSIONS = "exclude_extensions"
+RECURSIVE = "recursive"
+RECURSIVE_LEVEL = "recursive_level"
+WORDLIST = "wordlist"
+TIMEOUT = "timeout"
+SCREENSHOT_TIMEOUT = "screenshot_timeout"
+SCAN_TIMEOUT = "scan_timeout"
+EXCLUDED_SUBDOMAINS = "excluded_subdomains"
+EXCLUDE_TEXT = "exclude_text"
+IGNORE_FILE_EXTENSION = "ignore_file_extension"
+GF_PATTERNS = "gf_patterns"
+VULNERABILITY_SCAN = "vulnerability_scan"
+CUSTOM_NUCLEI_TEMPLATE = "custom_templates"
+NUCLEI_TEMPLATE = "templates"
+NUCLEI_SEVERITY = "severity"
+NUCLEI_CONCURRENCY = "concurrency"
+RATE_LIMIT = "rate_limit"
+RETRIES = "retries"
+OSINT = "osint"
+OSINT_DOCUMENTS_LIMIT = "documents_limit"
+OSINT_DISCOVER = "discover"
+OSINT_DORK = "dork"
+USE_AMASS_CONFIG = "use_amass_config"
+USE_SUBFINDER_CONFIG = "use_subfinder_config"
+USE_NUCLEI_CONFIG = "use_nuclei_config"
+USE_NAABU_CONFIG = "use_naabu_config"
+VALIDATE_SUBDOMAINS = "validate_subdomains"
+FILTER_STATUS_CODE = "filter_status_code"
+SCREENSHOT_SKIP_THESE_SITES = "skip_these_sites"
+SCREENSHOT_SKIP_THESE_CODES = "skip_these_codes"
+ABSOLUTE_THRESHOLD = "absolute_threshold"
 
 ###############################################################################
 # Wordlist DEFINITIONS
 ###############################################################################
-AMASS_DEFAULT_WORDLIST_PATH = 'wordlist/default_wordlist/deepmagic.com-prefixes-top50000.txt'
+AMASS_DEFAULT_WORDLIST_PATH = (
+    "wordlist/default_wordlist/deepmagic.com-prefixes-top50000.txt"
+)
 
 
 ###############################################################################
 # Logger DEFINITIONS
 ###############################################################################
 
-CONFIG_FILE_NOT_FOUND = 'Config file not found'
+CONFIG_FILE_NOT_FOUND = "Config file not found"
 
 ###############################################################################
 # Preferences DEFINITIONS
 ###############################################################################
 
-SMALL = '100px'
-MEDIM = '200px'
-LARGE = '400px'
-XLARGE = '500px'
+SMALL = "100px"
+MEDIM = "200px"
+LARGE = "400px"
+XLARGE = "500px"
 
 ###############################################################################
 # Interesting Subdomain DEFINITIONS
 ###############################################################################
-MATCHED_SUBDOMAIN = 'Subdomain'
-MATCHED_PAGE_TITLE = 'Page Title'
+MATCHED_SUBDOMAIN = "Subdomain"
+MATCHED_PAGE_TITLE = "Page Title"
 
 ###############################################################################
 # Uncommon Ports
@@ -180,7 +183,8 @@ UNCOMMON_WEB_PORTS = [
     20720,
     32000,
     55440,
-    55672]
+    55672,
+]
 
 SCAN_STATUS_PENDING = -1
 SCAN_STATUS_FAILED = 0
@@ -193,4 +197,4 @@ SCAN_ACTIVITY_STATUS_IN_PROGRESS = 1
 SCAN_ACTIVITY_STATUS_COMPLETED = 2
 SCAN_ACTIVITY_STATUS_ABORTED = 3
 
-RENGINE_URL= os.environ['RENGINE_URL']
+RENGINE_URL = os.environ["RENGINE_URL"]
