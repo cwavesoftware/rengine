@@ -138,3 +138,4 @@ RUN mkdir /usr/src/scan_results
 # Copy source code
 COPY ./tools /usr/src/app/tools
 RUN chmod +x /usr/src/app/tools/get_urls.sh
+RUN apt install -y libasound2
