@@ -18,7 +18,6 @@ ENV PYTHONUNBUFFERED 1
 RUN apt update -y && apt install -y --no-install-recommends \
     build-essential \
     cmake \
-    firefox \
     gcc \
     git \
     libpq-dev \
@@ -41,7 +40,12 @@ RUN apt update -y && apt install -y --no-install-recommends \
     wget \
     libbz2-dev \
     openimageio-tools \
-    jq 
+    jq \
+    unzip \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libxdamage1
 
 # python
 RUN apt install -y software-properties-common \
@@ -82,25 +86,17 @@ RUN git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/davidtavarez/pwnd
 # go
 RUN if [ "$(arch)" = "aarch64" ]; then \
       GO_VERSION=1.22.0.linux-arm64; \
+      wget https://playwright.azureedge.net/builds/chromium/1067/chromium-linux-arm64.zip; \
+      unzip chromium-linux-arm64.zip -d /opt/; \
     else \
       GO_VERSION=1.22.0.linux-amd64; \
+      wget https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/1131003/chrome-linux.zip; \
+      unzip chromium-linux.zip -d /opt/; \
     fi \
     && wget https://golang.org/dl/go${GO_VERSION}.tar.gz \
     && tar -xvf go${GO_VERSION}.tar.gz \
     && rm go${GO_VERSION}.tar.gz \
     && mv go /usr/local
-
-# Download geckodriver
-RUN GK_VERSION=0.34.0 \
-    ;if [ "$(arch)" = "aarch64" ]; then \
-      GK_ARCH=linux-aarch64; \
-    else \
-      GK_ARCH=linux64; \
-    fi \
-    ; wget https://github.com/mozilla/geckodriver/releases/download/v${GK_VERSION}/geckodriver-v${GK_VERSION}-${GK_ARCH}.tar.gz \
-    ; tar -xvf geckodriver-v${GK_VERSION}-${GK_ARCH}.tar.gz \
-    ; rm geckodriver-v${GK_VERSION}-${GK_ARCH}.tar.gz \
-    ; mv geckodriver /usr/bin
 
 # ENV for Go
 ENV GOROOT="/usr/local/go"
@@ -126,6 +122,7 @@ RUN GO111MODULE=on go install -v github.com/tomnomnom/waybackurls@latest
 RUN GO111MODULE=on go install -v github.com/jaeles-project/gospider@latest
 RUN GO111MODULE=on go install -v github.com/tomnomnom/gf@latest
 RUN go install -v github.com/owasp-amass/amass/v3/...@master
+RUN go install -v github.com/sensepost/gowitness@latest
 
 # Update Nuclei and Nuclei-Templates
 RUN nuclei -update

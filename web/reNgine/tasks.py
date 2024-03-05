@@ -13,6 +13,8 @@ from reNgine import definitions
 import whatportis
 import subprocess
 import time
+import sqlite3
+import urllib.parse as up
 
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium import webdriver
@@ -881,6 +883,8 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
     """
     This function is responsible for taking screenshots
     """
+    logger.info("gathering screenshots")
+
     notification = Notification.objects.all()
     if notification and notification[0].send_scan_status_notif:
         send_notification(
@@ -890,19 +894,16 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
     output_screenshots_path = results_dir + "/screenshots"
     result_csv_path = results_dir + "/screenshots/Requests.csv"
     alive_subdomains_path = results_dir + "/alive.txt"
+    screenshots_db = f"{results_dir}_gowitness.sqlite3"
 
-    eyewitness_command = "python3 /usr/src/github/EyeWitness/Python/EyeWitness.py"
-
-    eyewitness_command += " -f {} -d {} --no-prompt".format(
-        alive_subdomains_path, output_screenshots_path
-    )
+    cmd = f"gowitness file -f {alive_subdomains_path} --screenshot-path {output_screenshots_path} --chrome-path /opt/chrome-linux/chrome --db-location sqlite://{screenshots_db}"
 
     if (
         VISUAL_IDENTIFICATION in yaml_configuration
         and TIMEOUT in yaml_configuration[VISUAL_IDENTIFICATION]
         and yaml_configuration[VISUAL_IDENTIFICATION][TIMEOUT] > 0
     ):
-        eyewitness_command += " --timeout {}".format(
+        cmd += " --timeout {}".format(
             yaml_configuration[VISUAL_IDENTIFICATION][TIMEOUT]
         )
 
@@ -911,7 +912,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         and THREADS in yaml_configuration[VISUAL_IDENTIFICATION]
         and yaml_configuration[VISUAL_IDENTIFICATION][THREADS] > 0
     ):
-        eyewitness_command += " --threads {}".format(
+        cmd += " --threads {}".format(
             yaml_configuration[VISUAL_IDENTIFICATION][THREADS]
         )
 
@@ -920,42 +921,27 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         and DELAY in yaml_configuration[VISUAL_IDENTIFICATION]
         and yaml_configuration[VISUAL_IDENTIFICATION][DELAY] > 0
     ):
-        eyewitness_command += " --delay {}".format(
-            yaml_configuration[VISUAL_IDENTIFICATION][DELAY]
-        )
+        cmd += " --delay {}".format(yaml_configuration[VISUAL_IDENTIFICATION][DELAY])
 
-    logger.info(eyewitness_command)
+    logger.info(cmd)
 
-    os.system(eyewitness_command)
+    os.system(cmd)
 
-    if os.path.isfile(result_csv_path):
-        logger.info("Gathering Eyewitness results")
-        with open(result_csv_path, "r") as file:
-            reader = csv.reader(file)
-            for row in reader:
-                if (
-                    row[3] == "Successful"
-                    and Subdomain.objects.filter(scan_history__id=task.id)
-                    .filter(name=row[2])
-                    .exists()
-                ):
-                    subdomain = Subdomain.objects.get(
-                        scan_history__id=task.id, name=row[2]
-                    )
-                    subdomain.screenshot_path = row[4].replace(
-                        "/usr/src/scan_results/", ""
-                    )
-                    subdomain.save()
-
-    # remove all db, html extra files in screenshot results
-    # os.system('rm -rf {0}/*.csv {0}/*.db {0}/*.js {0}/*.html {0}/*.css'.format(
-    #     output_screenshots_path,
-    # ))
-    os.system(
-        "rm -rf {0}/source".format(
-            output_screenshots_path,
-        )
-    )
+    conn = sqlite3.connect(screenshots_db)
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM urls")
+    rows = cur.fetchall()
+    for row in rows:
+        name = up.urlparse(row[4]).netloc
+        if (
+            Subdomain.objects.filter(scan_history__id=task.id)
+            .filter(name=name)
+            .exists()
+        ):
+            subdomain = Subdomain.objects.get(scan_history__id=task.id, name=name)
+            subdomain.screenshot_path = f"{output_screenshots_path}/{row[11]}"
+            subdomain.save()
+    conn.close()
 
     if notification and notification[0].send_scan_status_notif:
         send_notification(
@@ -1006,7 +992,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                 skip_these_codes = yaml_configuration[VISUAL_IDENTIFICATION][
                     SCREENSHOT_SKIP_THESE_CODES
                 ]
-                logger.info(str(skip_these_codes))
+                logger.info(f"whitelisted status codes: {str(skip_these_codes)}")
             except Exception as ex:
                 logger.error(ex)
 
@@ -1020,7 +1006,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                     toAdd, res = compareImages(
                         d1.screenshot_path, d2.screenshot_path, threshold
                     )
-                    if res == None:
+                    if res is None:
                         d2.screenshot_path = "None.png"
                     break
             if toAdd:
