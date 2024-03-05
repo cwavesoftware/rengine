@@ -480,7 +480,7 @@ def subdomain_scan(
 
     if "oneforall" in tools:
         oneforall_command = (
-            "python3 /usr/src/github/OneForAll/oneforall.py --target {} run".format(
+            "python3.8 /usr/src/github/OneForAll/oneforall.py --target {} run".format(
                 domain.name, results_dir
             )
         )
@@ -1010,7 +1010,6 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
             except Exception as ex:
                 logger.error(ex)
 
-        notification = Notification.objects.all()
         for d1 in currentScanDomains:
             toAdd = False
             if d1.name in skip_these_sites or d1.http_status in skip_these_codes:
@@ -1043,7 +1042,9 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         logger.info(f"New domains have screenshots: {newDomainsWithScreens}")
 
         threshold = (
-            notification[0].notif_threshold if notification[0].notif_threshold else 100
+            notification[0].notif_threshold
+            if notification and notification[0].notif_threshold
+            else 100
         )
 
         if (
