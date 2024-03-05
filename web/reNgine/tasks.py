@@ -926,6 +926,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
     logger.info(cmd)
 
     os.system(cmd)
+    os.system(f"chmod -R 777 {output_screenshots_path}")
 
     conn = sqlite3.connect(screenshots_db)
     cur = conn.cursor()
