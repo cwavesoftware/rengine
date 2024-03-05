@@ -91,7 +91,7 @@ RUN if [ "$(arch)" = "aarch64" ]; then \
     else \
       GO_VERSION=1.22.0.linux-amd64; \
       wget https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/1131003/chrome-linux.zip; \
-      unzip chromium-linux.zip -d /opt/; \
+      unzip chrome-linux.zip -d /opt/; \
     fi \
     && wget https://golang.org/dl/go${GO_VERSION}.tar.gz \
     && tar -xvf go${GO_VERSION}.tar.gz \
