@@ -1,14 +1,13 @@
 #!/bin/bash
 
-if [ "$DATABASE" = "postgres" ]
-then
-    echo "Waiting for postgres..."
+if [ "$DATABASE" = "postgres" ]; then
+	echo "Waiting for postgres..."
 
-    while ! nc -z db 5432; do
-      sleep 0.1
-    done
+	while ! nc -z db 5432; do
+		sleep 0.1
+	done
 
-    echo "PostgreSQL started"
+	echo "PostgreSQL started"
 fi
 
 python3 manage.py makemigrations
@@ -24,10 +23,10 @@ yes | whatportis --update
 
 # check if default wordlist for amass exists
 if [ ! -f /usr/src/wordlist/deepmagic.com-prefixes-top50000.txt ]; then
-  wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/deepmagic.com-prefixes-top50000.txt -O /usr/src/wordlist/deepmagic.com-prefixes-top50000.txt
+	wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/deepmagic.com-prefixes-top50000.txt -O /usr/src/wordlist/deepmagic.com-prefixes-top50000.txt
 fi
 
 # test tools, required for configuration
 naabu && subfinder && amass && nuclei
-
+cp static/img/none.png ../scan_results/none.png
 exec "$@"

@@ -997,6 +997,9 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
             except Exception as ex:
                 logger.error(ex)
 
+        if notification and notification[0].send_visual_changes_to_slack:
+            existingFiles = getFiles()
+
         for d1 in currentScanDomains:
             toAdd = False
             if d1.name in skip_these_sites or d1.http_status in skip_these_codes:
@@ -1004,27 +1007,72 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                 continue
             for d2 in prevDomains:
                 if d1.name == d2.name:
-                    toAdd, res = compareImages(
-                        d1.screenshot_path, d2.screenshot_path, threshold
-                    )
-                    if res is None:
-                        d2.screenshot_path = "None.png"
+                    if not d2.screenshot_path or d2.screenshot_path == "":
+                        toAdd = True
+                        d2.screenshot_path = "none.png"
+                    else:
+                        toAdd, res = compareImages(
+                            d1.screenshot_path, d2.screenshot_path, threshold
+                        )
                     break
             if toAdd:
-                newDomainsWithScreens.append(
-                    {
-                        "current": {
-                            "subdomain": d1.name,
-                            "date": d1.discovered_date,
-                            "img": f"{RENGINE_URL}/media/{d1.screenshot_path}",
-                        },
-                        "prev": {
-                            "subdomain": d2.name,
-                            "date": d2.discovered_date,
-                            "img": f"{RENGINE_URL}/media/{d2.screenshot_path}",
-                        },
-                    }
-                )
+                if notification and notification[0].send_visual_changes_to_slack:
+                    if not d1.screenshot_public_url or d1.screenshot_public_url == "":
+                        fpath = os.path.join(
+                            "/usr/src/scan_results", d1.screenshot_path
+                        )
+                        fname = (
+                            d1.screenshot_path.split("/")[0]
+                            + "_"
+                            + d1.screenshot_path.split("/")[-1]
+                        )
+                        current_img = upload(fpath, fname, existingFiles)
+                        if not current_img:
+                            logger.error(
+                                f"Could not uploadAndPublish for subdomain id {d1.id}"
+                            )
+                        if current_img:
+                            d1.screenshot_public_url = current_img
+                            d1.save()
+                            logger.info(
+                                f"screenshot_public_url for subdomain id {d1.id} updated in the database"
+                            )
+
+                    if not d2.screenshot_public_url or d2.screenshot_public_url == "":
+                        fpath = os.path.join(
+                            "/usr/src/scan_results", d2.screenshot_path
+                        )
+                        fname = (
+                            d2.screenshot_path.split("/")[0]
+                            + "_"
+                            + d2.screenshot_path.split("/")[-1]
+                        )
+                        prev_img = upload(fpath, fname, existingFiles)
+                        if not prev_img:
+                            logger.error(
+                                "Could not upload screenshot for subdomain id {d2.id}"
+                            )
+                        if prev_img:
+                            d2.screenshot_public_url = prev_img
+                            d2.save()
+                            logger.info(
+                                f"screenshot_public_url for subdomain id {d2.id} updated in the database"
+                            )
+
+                    newDomainsWithScreens.append(
+                        {
+                            "current": {
+                                "subdomain": d1.name,
+                                "date": d1.discovered_date,
+                                "img": d1.screenshot_public_url,
+                            },
+                            "prev": {
+                                "subdomain": d2.name,
+                                "date": d2.discovered_date,
+                                "img": d2.screenshot_public_url,
+                            },
+                        }
+                    )
 
         logger.info(f"New domains have screenshots: {newDomainsWithScreens}")
 
@@ -1050,7 +1098,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
 
                 if notification[0].send_visual_changes_to_slack:
                     message = header
-                    send_notification(message)
+                    # send_notification(message)
 
                     try:
                         with open(
@@ -1083,10 +1131,10 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                             ),
                         )
                         msg = msg.replace(
-                            "<curr_img_url>", subdomain_dict["current"]["img"]
+                            "<curr_img_id>", subdomain_dict["current"]["img"]
                         )
                         msg = msg.replace(
-                            "<prev_img_url>", subdomain_dict["prev"]["img"]
+                            "<prev_img_id>", subdomain_dict["prev"]["img"]
                         )
                         messages_with_img.append(msg)
 
@@ -1106,8 +1154,6 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
 
 
 def compareImages(imgPath1, imgPath2, threshold=50):
-    if not imgPath2 or imgPath2 == "":
-        return True, None
     idiffArgs = [
         "-failpercent",
         f"{threshold}",

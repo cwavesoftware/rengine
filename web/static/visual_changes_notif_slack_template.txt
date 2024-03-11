@@ -6,8 +6,10 @@
 				"type": "plain_text",
 				"text": "<subdomain> on <date1>"
 			},
-			"image_url": "<curr_img_url>",
-            "alt_text": ""
+			"slack_file": {
+				"id": "<curr_img_id>"
+			},
+			"alt_text": ""
 		},
 		{
 			"type": "image",
@@ -15,8 +17,10 @@
 				"type": "plain_text",
 				"text": "<subdomain> on <date2>"
 			},
-			"image_url": "<prev_img_url>",
-            "alt_text": ""
+			"slack_file": {
+				"id": "<prev_img_id>"
+			},
+			"alt_text": ""
 		}
 	]
 }
