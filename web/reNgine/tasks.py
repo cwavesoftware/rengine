@@ -680,6 +680,7 @@ def get_new_added_subdomain(current_scan_id, domain_id, compare_with_all_scans=T
         ScanHistory.objects.filter(domain=domain_id)
         .filter(subdomain_discovery=True)
         .filter(id__lte=current_scan_id)
+        .filter(scan_status=definitions.SCAN_STATUS_COMPLETED)
     )
     logger.info(f"found {scan_history.count()} previous scans, including this one")
     if scan_history.count() > 1:
@@ -958,6 +959,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         prevDomains = (
             Subdomain.objects.filter(target_domain=domain)
             .filter(scan_history__scan_status=definitions.SCAN_STATUS_COMPLETED)
+            .filter(scan_history__screenshot=True)
             .exclude(scan_history__id=currentScanId)
             .order_by("-id")
         )
@@ -1022,7 +1024,10 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                     break
             if toAdd:
                 if notification and notification[0].send_visual_changes_to_slack:
-                    if not d1.screenshot_public_url or d1.screenshot_public_url == "":
+                    if (
+                        not d1.screenshot_slack_file_id
+                        or d1.screenshot_slack_file_id == ""
+                    ):
                         fpath = os.path.join(
                             "/usr/src/scan_results", d1.screenshot_path
                         )
@@ -1037,13 +1042,16 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                                 f"Could not uploadAndPublish for subdomain id {d1.id}"
                             )
                         if current_img:
-                            d1.screenshot_public_url = current_img
+                            d1.screenshot_slack_file_id = current_img
                             d1.save()
                             logger.info(
-                                f"screenshot_public_url for subdomain id {d1.id} updated in the database"
+                                f"screenshot_slack_file_id for subdomain id {d1.id} updated in the database"
                             )
 
-                    if not d2.screenshot_public_url or d2.screenshot_public_url == "":
+                    if (
+                        not d2.screenshot_slack_file_id
+                        or d2.screenshot_slack_file_id == ""
+                    ):
                         fpath = os.path.join(
                             "/usr/src/scan_results", d2.screenshot_path
                         )
@@ -1058,10 +1066,10 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                                 "Could not upload screenshot for subdomain id {d2.id}"
                             )
                         if prev_img:
-                            d2.screenshot_public_url = prev_img
+                            d2.screenshot_slack_file_id = prev_img
                             d2.save()
                             logger.info(
-                                f"screenshot_public_url for subdomain id {d2.id} updated in the database"
+                                f"screenshot_slack_file_id for subdomain id {d2.id} updated in the database"
                             )
 
                     newDomainsWithScreens.append(
@@ -1069,12 +1077,12 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                             "current": {
                                 "subdomain": d1.name,
                                 "date": d1.discovered_date,
-                                "img": d1.screenshot_public_url,
+                                "img": d1.screenshot_slack_file_id,
                             },
                             "prev": {
                                 "subdomain": d2.name,
                                 "date": d2.discovered_date,
-                                "img": d2.screenshot_public_url,
+                                "img": d2.screenshot_slack_file_id,
                             },
                         }
                     )

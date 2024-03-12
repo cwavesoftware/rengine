@@ -53,7 +53,7 @@ def uploadFileIfNotExists(fpath, fname, existingFiles, user=SLACK_USER):
 
 
 def fileExists(fname, existingFiles, user=SLACK_USER):
-    logging.info("Checking if file exists ...")
+    logging.info(f"Checking if file {fname} exists ...")
     if existingFiles:
         files = existingFiles
     else:

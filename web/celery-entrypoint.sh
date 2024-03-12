@@ -10,13 +10,13 @@ if [ "$DATABASE" = "postgres" ]; then
 	echo "PostgreSQL started"
 fi
 
-python3 manage.py makemigrations
-python3 manage.py migrate
-python3 manage.py collectstatic --no-input --clear
+python3.8 manage.py makemigrations --noinput
+python3.8 manage.py migrate --noinput
+python3.8 manage.py collectstatic --no-input --clear
 
-python3 manage.py loaddata fixtures/default_scan_engines.yaml --app scanEngine.EngineType
+python3.8 manage.py loaddata fixtures/default_scan_engines.yaml --app scanEngine.EngineType
 #Load Default keywords
-python3 manage.py loaddata fixtures/default_keywords.yaml --app scanEngine.InterestingLookupModel
+python3.8 manage.py loaddata fixtures/default_keywords.yaml --app scanEngine.InterestingLookupModel
 
 # update whatportis
 yes | whatportis --update
