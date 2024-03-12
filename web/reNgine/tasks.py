@@ -952,12 +952,17 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
     if "subdomain" in locals():
         currentScanId = task.id
         logger.info(
-            f"Comparing current scan's screenshots with the last screenshot found in any previous scan"
+            f"Comparing current scan's screenshots with the last screenshot found in any successfull previous scan"
         )
 
-        prevDomains = Subdomain.objects.exclude(
-            scan_history__id=currentScanId
-        ).order_by("-id")
+        prevDomains = (
+            Subdomain.objects.filter(target_domain=domain)
+            .filter(scan_history__scan_status=definitions.SCAN_STATUS_COMPLETED)
+            .exclude(scan_history__id=currentScanId)
+            .order_by("-id")
+        )
+        logger.info(f"found {len(prevDomains)} prevDomains for visual comparison")
+
         currentScanDomains = Subdomain.objects.filter(
             scan_history__id=currentScanId
         ).exclude(screenshot_path__isnull=True)
