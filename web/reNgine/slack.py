@@ -1,9 +1,13 @@
 #!/usr/bin/python3
 
-import os, sys, json
+import os
+import sys
+import json
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-import logging
+from celery.utils.log import get_task_logger
+
+logger = get_task_logger(__name__)
 
 SLACK_USER = ""
 client = WebClient(token=os.environ["SLACK_TOKEN"])
@@ -13,8 +17,16 @@ def getFiles(user=SLACK_USER):
     files = []
     page = 1
     while True:
-        logging.info(f"Getting files of user {user}, page {page} ...")
-        filesperPage = client.files_list(user=user, page=page).data["files"]
+        logger.info(f"Getting files of user {user}, page {page} ...")
+        retries = 0
+        while retries < 3:
+            try:
+                filesperPage = client.files_list(
+                    user=user, page=page).data["files"]
+                retries = 3
+            except Exception as ex:
+                logger.error(ex)
+                retries += 1
         files += filesperPage
         page += 1
         if len(filesperPage) == 0:
@@ -25,15 +37,20 @@ def getFiles(user=SLACK_USER):
 def uploadFile(fpath, fname):
     with open(fpath, "rb") as fin:
         fcontent = fin.read()
-        logging.info(
-            f"Uploading {fpath} under name {fname}, size = {len(fcontent)} ..."
-        )
-        result = client.files_upload(file=fcontent, filename=fname)
-        logging.debug(result)
+        logger.info(f"Uploading {fpath} under name {fname}, size = {len(fcontent)} ...")
+        retries = 0
+        while retries < 3:
+            try:
+                result = client.files_upload(file=fcontent, filename=fname)
+                retries = 3
+            except Exception as ex:
+                logger.error(ex)
+                retries += 1
+        logger.debug(result)
         if result.data["ok"]:
             return result.data["file"]
         else:
-            logging.error(f"Could not upload the file, error = {result.data['error']}")
+            logger.error(f"Could not upload the file, error = {result.data['error']}")
 
 
 def uploadFileIfNotExists(fpath, fname, existingFiles, user=SLACK_USER):
@@ -43,17 +60,17 @@ def uploadFileIfNotExists(fpath, fname, existingFiles, user=SLACK_USER):
         user,
     )
     if not exist:
-        logging.info("File does not exists")
+        logger.info("File does not exists")
         result = uploadFile(fpath, fname)
-        logging.info(f"File uploaded, ID = {result['id']}")
+        logger.info(f"File uploaded, ID = {result['id']}")
         return result
     else:
-        logging.info(f'File exists, ID = {fileInfo["id"]}')
+        logger.info(f'File exists, ID = {fileInfo["id"]}')
         return fileInfo
 
 
 def fileExists(fname, existingFiles, user=SLACK_USER):
-    logging.info(f"Checking if file {fname} exists ...")
+    logger.info(f"Checking if file {fname} exists ...")
     if existingFiles:
         files = existingFiles
     else:
@@ -65,20 +82,21 @@ def fileExists(fname, existingFiles, user=SLACK_USER):
 
 
 def publishFile(fileId):
-    logging.info(f"Publishing file {fileId}")
+    logger.info(f"Publishing file {fileId}")
     try:
         result = client.files_sharedPublicURL(file=fileId).data
-        logging.debug(result)
+        logger.debug(result)
         fileInfo = result["file"]
     except SlackApiError as ex:
         if ex.response.data["error"] == "already_public":
-            logging.warning(f"File {fileId} is already public. Getting its info ...")
+            logger.warning(
+                f"File {fileId} is already public. Getting its info ...")
             fileInfo = getFileInfo(fileId)
         else:
-            logging.error(ex)
+            logger.error(ex)
             return None
     except Exception as ex:
-        logging.error(ex)
+        logger.error(ex)
         return None
 
     return f"{fileInfo['url_private']}?pub_secret={fileInfo['permalink_public'].split('-')[-1]}"
@@ -92,7 +110,7 @@ def uploadAndPublish(fpath, fname, existingFiles, user=SLACK_USER):
         url_public = publishFile(fileInfo["id"])
         if not url_public:
             return None
-        logging.info(f"File published: {url_public}")
+        logger.info(f"File published: {url_public}")
     else:
         url_public = f"{fileInfo['url_private']}?pub_secret={fileInfo['permalink_public'].split('-')[-1]}"
     return url_public
@@ -101,10 +119,10 @@ def uploadAndPublish(fpath, fname, existingFiles, user=SLACK_USER):
 def upload(fpath, fname, existingFiles, user=SLACK_USER):
     try:
         fileInfo = uploadFileIfNotExists(fpath, fname, existingFiles, user)
-        logging.info(fileInfo)
+        logger.info(fileInfo)
         return fileInfo["id"]
     except Exception as ex:
-        logging.error(ex)
+        logger.error(ex)
         return None
 
 
@@ -117,6 +135,6 @@ def getFileInfo(fileId):
 if __name__ == "__main__":
     try:
         api_response = client.api_test()
-        logging.info("Slack API status OK")
+        logger.info("Slack API status OK")
     except:
-        logging.error("Cannot call Slack API")
+        logger.error("Cannot call Slack API")
