@@ -45,7 +45,8 @@ RUN apt update -y && apt install -y --no-install-recommends \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
     libcups2 \
-    libxdamage1
+    libxdamage1 \
+    libasound2
 
 # python
 RUN apt install -y software-properties-common \
@@ -76,7 +77,6 @@ RUN git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/aboul3la/Sublist3
 RUN python3.8 -m pip install -r /usr/src/github/Sublist3r/requirements.txt
 RUN git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/shmilylty/OneForAll /usr/src/github/OneForAll
 RUN python3.8 -m pip install -r /usr/src/github/OneForAll/requirements.txt
-RUN git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/FortyNorthSecurity/EyeWitness /usr/src/github/EyeWitness
 RUN git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/laramies/theHarvester /usr/src/github/theHarvester
 
 RUN python3.10 get-pip.py
@@ -92,6 +92,17 @@ RUN if [ "$(arch)" = "aarch64" ]; then \
       GO_VERSION=1.22.0.linux-amd64; \
       wget https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/1131003/chrome-linux.zip; \
       unzip chrome-linux.zip -d /opt/; \
+      # geckodriver (used by EyeWitness) won't work on Apple Silicon chips, will break at runtime
+      # make sure you set 'gowitness' in the scan config file
+      # Download geckodriver
+      wget https://github.com/mozilla/geckodriver/releases/download/v0.32.0/geckodriver-v0.32.0-linux64.tar.gz; \
+      tar -xvf geckodriver-v0.32.0-linux64.tar.gz; \
+      rm geckodriver-v0.32.0-linux64.tar.gz; \
+      cp geckodriver /usr/bin; \
+      cp geckodriver /usr/sbin; \
+      git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/FortyNorthSecurity/EyeWitness /usr/src/github/EyeWitness; \
+      bash /usr/src/github/EyeWitness/Python/setup/setup.sh; \
+      add-apt-repository ppa:mozillateam/ppa; \
     fi \
     && wget https://golang.org/dl/go${GO_VERSION}.tar.gz \
     && tar -xvf go${GO_VERSION}.tar.gz \
@@ -138,4 +149,3 @@ RUN mkdir /usr/src/scan_results
 # Copy source code
 COPY ./tools /usr/src/app/tools
 RUN chmod +x /usr/src/app/tools/get_urls.sh
-RUN apt install -y libasound2

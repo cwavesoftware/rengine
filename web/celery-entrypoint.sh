@@ -18,6 +18,19 @@ python3.8 manage.py loaddata fixtures/default_scan_engines.yaml --app scanEngine
 #Load Default keywords
 python3.8 manage.py loaddata fixtures/default_keywords.yaml --app scanEngine.InterestingLookupModel
 
+# install firefox https://askubuntu.com/a/1404401 \
+echo '
+Package: *
+Pin: release o=LP-PPA-mozillateam
+Pin-Priority: 1001
+
+Package: firefox
+Pin: version 1:1snap1-0ubuntu2
+Pin-Priority: -1
+' | tee /etc/apt/preferences.d/mozilla-firefox
+apt update
+apt install firefox -y --allow-downgrades
+
 # update whatportis
 yes | whatportis --update
 

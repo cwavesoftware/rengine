@@ -893,11 +893,20 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         )
 
     output_screenshots_path = results_dir + "/screenshots"
-    result_csv_path = results_dir + "/screenshots/Requests.csv"
+    result_csv_path = f"{output_screenshots_path}/Requests.csv"
     alive_subdomains_path = results_dir + "/alive.txt"
     screenshots_db = f"{results_dir}_gowitness.sqlite3"
 
-    cmd = f"gowitness file -f {alive_subdomains_path} --screenshot-path {output_screenshots_path} --chrome-path /opt/chrome-linux/chrome --db-location sqlite://{screenshots_db}"
+    gowitness = False
+    if (
+        VISUAL_IDENTIFICATION in yaml_configuration
+        and USES_TOOLS in yaml_configuration[VISUAL_IDENTIFICATION]
+        and "gowitness" in yaml_configuration[VISUAL_IDENTIFICATION][USES_TOOLS]
+    ):
+        gowitness = True
+        cmd = f"gowitness file -f {alive_subdomains_path} --screenshot-path {output_screenshots_path} --chrome-path /opt/chrome-linux/chrome --db-location sqlite://{screenshots_db}"
+    else:
+        cmd = f"python3 /usr/src/github/EyeWitness/Python/EyeWitness.py -f {alive_subdomains_path} -d {output_screenshots_path} --no-prompt"
 
     if (
         VISUAL_IDENTIFICATION in yaml_configuration
@@ -926,24 +935,45 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
 
     logger.info(cmd)
 
-    os.system(cmd)
-    os.system(f"chmod -R 777 {output_screenshots_path}")
+    os.system(
+        f"mkdir -p {output_screenshots_path} && {cmd} && chmod -R 777 {output_screenshots_path}"
+    )
 
-    conn = sqlite3.connect(screenshots_db)
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM urls")
-    rows = cur.fetchall()
-    for row in rows:
-        name = up.urlparse(row[4]).netloc
-        if (
-            Subdomain.objects.filter(scan_history__id=task.id)
-            .filter(name=name)
-            .exists()
-        ):
-            subdomain = Subdomain.objects.get(scan_history__id=task.id, name=name)
-            subdomain.screenshot_path = f"{output_screenshots_path}/{row[11]}"
-            subdomain.save()
-    conn.close()
+    if gowitness:
+        conn = sqlite3.connect(screenshots_db)
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM urls")
+        rows = cur.fetchall()
+        for row in rows:
+            name = up.urlparse(row[4]).netloc
+            if (
+                Subdomain.objects.filter(scan_history__id=task.id)
+                .filter(name=name)
+                .exists()
+            ):
+                subdomain = Subdomain.objects.get(scan_history__id=task.id, name=name)
+                subdomain.screenshot_path = f"{output_screenshots_path}/{row[11]}"
+                subdomain.save()
+        conn.close()
+    else:  # EyeWitness
+        with open(result_csv_path, "r") as file:
+            reader = csv.reader(file)
+            for row in reader:
+                "Protocol,Port,Domain,Request Status,Screenshot Path, Source Path"
+                protocol, port, subdomain_name, status, screenshot_path, source_path = (
+                    tuple(row)
+                )
+                logger.info(f"{protocol}:{port}:{subdomain_name}:{status}")
+                subdomain_query = Subdomain.objects.filter(
+                    scan_history__id=task.id
+                ).filter(name=subdomain_name)
+                if status == "Successful" and subdomain_query.exists():
+                    subdomain = subdomain_query.first()
+                    subdomain.screenshot_path = screenshot_path.replace(
+                        "/usr/src/scan_results/", ""
+                    )
+                    subdomain.save()
+                    logger.warning(f"Added screenshot for {subdomain.name} to DB")
 
     if notification and notification[0].send_scan_status_notif:
         send_notification(
