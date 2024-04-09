@@ -955,25 +955,36 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                 subdomain.screenshot_path = f"{output_screenshots_path}/{row[11]}"
                 subdomain.save()
         conn.close()
+
     else:  # EyeWitness
-        with open(result_csv_path, "r") as file:
-            reader = csv.reader(file)
-            for row in reader:
-                "Protocol,Port,Domain,Request Status,Screenshot Path, Source Path"
-                protocol, port, subdomain_name, status, screenshot_path, source_path = (
-                    tuple(row)
-                )
-                logger.info(f"{protocol}:{port}:{subdomain_name}:{status}")
-                subdomain_query = Subdomain.objects.filter(
-                    scan_history__id=task.id
-                ).filter(name=subdomain_name)
-                if status == "Successful" and subdomain_query.exists():
-                    subdomain = subdomain_query.first()
-                    subdomain.screenshot_path = screenshot_path.replace(
-                        "/usr/src/scan_results/", ""
-                    )
-                    subdomain.save()
-                    logger.warning(f"Added screenshot for {subdomain.name} to DB")
+        if os.path.isfile(result_csv_path):
+            with open(result_csv_path, "r") as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    "Protocol,Port,Domain,Request Status,Screenshot Path, Source Path"
+                    (
+                        protocol,
+                        port,
+                        subdomain_name,
+                        status,
+                        screenshot_path,
+                        source_path,
+                    ) = tuple(row)
+                    logger.info(f"{protocol}:{port}:{subdomain_name}:{status}")
+                    subdomain_query = Subdomain.objects.filter(
+                        scan_history__id=task.id
+                    ).filter(name=subdomain_name)
+                    if status == "Successful" and subdomain_query.exists():
+                        subdomain = subdomain_query.first()
+                        subdomain.screenshot_path = screenshot_path.replace(
+                            "/usr/src/scan_results/", ""
+                        )
+                        subdomain.save()
+                        logger.info(f"Added screenshot for {subdomain.name} to DB")
+        else:
+            logger.warning(
+                f"{result_csv_path} not found, probably no screenshots were taken"
+            )
 
     if notification and notification[0].send_scan_status_notif:
         send_notification(
@@ -1044,14 +1055,14 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                 continue
             for d2 in prevDomains:
                 if d1.name == d2.name:
-                    if not d2.screenshot_path or d2.screenshot_path == "":
-                        toAdd = True
-                        d2.screenshot_path = "none.png"
-                    else:
+                    if d2.screenshot_path and d2.screenshot_path != "":
                         toAdd, res = compareImages(
                             d1.screenshot_path, d2.screenshot_path, threshold
                         )
-                    break
+                        break
+                    else:
+                        d2.screenshot_path = "none.png"
+                        toAdd = True
             if toAdd:
                 if notification and notification[0].send_visual_changes_to_slack:
                     if (
