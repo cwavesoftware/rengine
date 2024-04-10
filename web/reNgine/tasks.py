@@ -1053,16 +1053,39 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
             if d1.name in skip_these_sites or d1.http_status in skip_these_codes:
                 logger.info(f"skipping {d1.name}")
                 continue
-            for d2 in prevDomains:
-                if d1.name == d2.name:
-                    if d2.screenshot_path and d2.screenshot_path != "":
-                        toAdd, res = compareImages(
-                            d1.screenshot_path, d2.screenshot_path, threshold
-                        )
-                        break
-                    else:
-                        d2.screenshot_path = "none.png"
-                        toAdd = True
+
+            d2 = (
+                Subdomain.objects.filter(name=d1.name)
+                .exclude(scan_history__id=currentScanId)
+                .filter(scan_history__scan_status=definitions.SCAN_STATUS_COMPLETED)
+                .filter(scan_history__screenshot=True)
+                .order_by("-id")
+            )
+            d2WithScreens = (
+                d2.exclude(screenshot_path=None)
+                .exclude(screenshot_path="")
+                .exclude(screenshot_path="none.png")
+                .order_by("-id")
+            )
+
+            if len(d2) == 0:
+                logger.info(
+                    f"could not find {d1.name} in previous successfull scans with screenshots"
+                )
+                continue
+            elif len(d2WithScreens) == 0:
+                logger.info(
+                    f"could not find any screenshot of {d1.name} in previous scans"
+                )
+                d2 = d2[0]
+                d2.screenshot_path = "none.png"
+            else:
+                d2 = d2WithScreens[0]
+
+            toAdd, res = compareImages(
+                d1.screenshot_path, d2.screenshot_path, threshold
+            )
+
             if toAdd:
                 if notification and notification[0].send_visual_changes_to_slack:
                     if (
