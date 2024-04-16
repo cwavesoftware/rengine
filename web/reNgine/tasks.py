@@ -1198,13 +1198,13 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                         msg = msg.replace(
                             "<date1>",
                             subdomain_dict["current"]["date"].strftime(
-                                "%d.%m.%Y, %H:%M:%S"
+                                "%Y-%m-%d %H:%M:%S.%f %z"
                             ),
                         )
                         msg = msg.replace(
                             "<date2>",
                             subdomain_dict["prev"]["date"].strftime(
-                                "%d.%m.%Y, %H:%M:%S"
+                                "%Y-%m-%d %H:%M:%S.%f %z"
                             ),
                         )
                         msg = msg.replace(
