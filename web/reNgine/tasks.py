@@ -1050,7 +1050,8 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
 
         for d1 in currentScanDomains:
             toAdd = False
-            if d1.name in skip_these_sites or d1.http_status in skip_these_codes:
+            skip = [x for x in skip_these_sites if d1.name.endswith(x)]
+            if skip or d1.http_status in skip_these_codes:
                 logger.info(f"skipping {d1.name}")
                 continue
 
@@ -1198,13 +1199,13 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                         msg = msg.replace(
                             "<date1>",
                             subdomain_dict["current"]["date"].strftime(
-                                "%Y-%m-%d %H:%M:%S.%f %z"
+                                "%d.%m.%Y, %H:%M:%S"
                             ),
                         )
                         msg = msg.replace(
                             "<date2>",
                             subdomain_dict["prev"]["date"].strftime(
-                                "%Y-%m-%d %H:%M:%S.%f %z"
+                                "%d.%m.%Y, %H:%M:%S"
                             ),
                         )
                         msg = msg.replace(
