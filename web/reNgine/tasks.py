@@ -1798,7 +1798,7 @@ def vulnerability_scan(task, domain, yaml_configuration, results_dir, activity_i
 
     vulnerability_scan_input_file = results_dir + urls_path
 
-    nuclei_command = "nuclei -l {} -o {}".format(
+    nuclei_command = "nuclei -l {} -j -o {}".format(
         vulnerability_scan_input_file, vulnerability_result_path
     )
 
