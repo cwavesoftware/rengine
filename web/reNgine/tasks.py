@@ -628,7 +628,7 @@ def subdomain_scan(
                         newly_added_subdomain.count(), domain.name
                     )
                     for subdomain in newly_added_subdomain:
-                        message += "\n• {}".format(subdomain.name)
+                        message += "\n{}".format(subdomain.name)
                 else:
                     message = f"New subdomains discovered on {domain.name} exceeds notification threshold. Something is wrong, check the subdomain discovery tools"
                     logger.info(message)
