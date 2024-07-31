@@ -1,5 +1,5 @@
 import json
-
+import logging
 from django.db.models import Q
 from django.db.models import CharField, Value, Count
 from django.core import serializers
@@ -22,7 +22,7 @@ from reNgine.common_func import is_safe_path
 from django import http
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
-
+from reNgine.tasks import get_new_added_subdomain 
 
 class VulnerabilityReport(APIView):
     def get(self, request):
@@ -1376,8 +1376,11 @@ def scanStatus(request, scanId):
 
 def scanNewSubs(request, scanId):
     scan = get_object_or_404(ScanHistory, pk=scanId)
-
-    return http.JsonResponse({"error": "false", "newSubs": []})
+    newly_added_subdomain = get_new_added_subdomain(
+            scan.id, scan.domain.id
+        ).values()
+    logging.debug(newly_added_subdomain)
+    return http.JsonResponse({"error": "false", "new_subs": list(newly_added_subdomain)})
 
 
 class OrganizationApiView(APIView):
