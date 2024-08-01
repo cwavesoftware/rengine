@@ -689,7 +689,6 @@ def get_new_added_subdomain(current_scan_id, domain_id, compare_with_all_scans=T
         scanned_host_q1 = Subdomain.objects.filter(
             scan_history__id=current_scan_id
         ).values("name")
-        logger.debug(list(scanned_host_q1))
         if compare_with_all_scans:
             logger.info("comparing with all scans")
             scanned_host_q2 = (
@@ -704,7 +703,6 @@ def get_new_added_subdomain(current_scan_id, domain_id, compare_with_all_scans=T
                 scan_history__id=previous_scan.id
             ).values("name")
 
-        logger.debug(list(scanned_host_q2))
         added_subdomain = scanned_host_q1.difference(scanned_host_q2)
         logger.info(f"{added_subdomain.count()} subdomains added")
 
