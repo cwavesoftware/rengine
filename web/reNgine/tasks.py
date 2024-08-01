@@ -690,6 +690,7 @@ def get_new_added_subdomain(current_scan_id, domain_id, compare_with_all_scans=T
             scan_history__id=current_scan_id
         ).values("name")
         if compare_with_all_scans:
+            logger.info("comparing with all scans")
             scanned_host_q2 = (
                 Subdomain.objects.filter(target_domain__id=domain_id)
                 .exclude(scan_history__id=current_scan_id)
@@ -697,6 +698,7 @@ def get_new_added_subdomain(current_scan_id, domain_id, compare_with_all_scans=T
                 .distinct("name")
             )
         else:
+            logger.info(f"comparing with scan ID ${previous_scan.id}")
             scanned_host_q2 = Subdomain.objects.filter(
                 scan_history__id=previous_scan.id
             ).values("name")
