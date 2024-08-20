@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class EngineType(models.Model):
     id = models.AutoField(primary_key=True)
     engine_name = models.CharField(max_length=200)
@@ -24,8 +25,8 @@ class EngineType(models.Model):
             self.fetch_url,
             self.vulnerability_scan,
             self.osint,
-            self.screenshot
-            ]
+            self.screenshot,
+        ]
         return sum(bool(item) for item in engine_list)
 
 
@@ -64,7 +65,8 @@ class Notification(models.Model):
     send_to_discord = models.BooleanField(default=False)
     send_to_telegram = models.BooleanField(default=False)
 
-    slack_hook_url = models.CharField(max_length=200, null=True, blank=True)
+    slack_token = models.CharField(max_length=200, null=True, blank=True)
+    slack_channel_id = models.CharField(max_length=12, null=True, blank=True)
     discord_hook_url = models.CharField(max_length=200, null=True, blank=True)
     telegram_bot_token = models.CharField(max_length=100, null=True, blank=True)
     telegram_bot_chat_id = models.CharField(max_length=100, null=True, blank=True)

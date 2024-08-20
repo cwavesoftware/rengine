@@ -1,16 +1,20 @@
 #!/usr/bin/python3
 
-import os
-import sys
-import json
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
+import requests
+import json
 from celery.utils.log import get_task_logger
+from scanEngine.models import Notification
 
 logger = get_task_logger(__name__)
 
 SLACK_USER = ""
-client = WebClient(token=os.environ["SLACK_TOKEN"])
+SLACK_TOKEN = ""
+notif = Notification.objects.all()
+if notif and notif[0]:
+    SLACK_TOKEN = notif[0].slack_token
+client = WebClient(token=SLACK_TOKEN)
 
 
 def getFiles(user=SLACK_USER):
@@ -21,8 +25,7 @@ def getFiles(user=SLACK_USER):
         retries = 0
         while retries < 3:
             try:
-                filesperPage = client.files_list(
-                    user=user, page=page).data["files"]
+                filesperPage = client.files_list(user=user, page=page).data["files"]
                 retries = 3
             except Exception as ex:
                 logger.error(ex)
@@ -89,8 +92,7 @@ def publishFile(fileId):
         fileInfo = result["file"]
     except SlackApiError as ex:
         if ex.response.data["error"] == "already_public":
-            logger.warning(
-                f"File {fileId} is already public. Getting its info ...")
+            logger.warning(f"File {fileId} is already public. Getting its info ...")
             fileInfo = getFileInfo(fileId)
         else:
             logger.error(ex)
@@ -130,11 +132,3 @@ def getFileInfo(fileId):
     result = client.files_info(file=fileId)
     if result.data["ok"]:
         return result.data["file"]
-
-
-if __name__ == "__main__":
-    try:
-        api_response = client.api_test()
-        logger.info("Slack API status OK")
-    except:
-        logger.error("Cannot call Slack API")

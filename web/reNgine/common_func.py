@@ -191,8 +191,8 @@ def send_slack_message(message, raw=False):
     notification = Notification.objects.all()
     if notification and notification[0].send_to_slack:
         payload = {
-            "token": os.environ["SLACK_TOKEN"],
-            "channel": os.environ["SLACK_CHANNEL_ID"],
+            "token": notification[0].slack_token,
+            "channel": notification[0].slack_channel_id,
         }
         if raw:
             payload["blocks"] = json.dumps(json.loads(message)["blocks"])
