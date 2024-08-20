@@ -11,10 +11,13 @@ logger = get_task_logger(__name__)
 
 SLACK_USER = ""
 SLACK_TOKEN = ""
-notif = Notification.objects.all()
-if notif and notif[0]:
-    SLACK_TOKEN = notif[0].slack_token
-client = WebClient(token=SLACK_TOKEN)
+try:
+    notif = Notification.objects.all()
+    if notif and notif[0]:
+        SLACK_TOKEN = notif[0].slack_token
+    client = WebClient(token=SLACK_TOKEN)
+except Exception as ex:
+    logger.error(ex)
 
 
 def getFiles(user=SLACK_USER):
