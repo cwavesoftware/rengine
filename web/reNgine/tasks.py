@@ -977,7 +977,11 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                     subdomain_query = Subdomain.objects.filter(
                         scan_history__id=task.id
                     ).filter(name=subdomain_name)
-                    if status == "Successful" and subdomain_query.exists():
+                    if (
+                        status == "Successful"
+                        and subdomain_query.exists()
+                        and os.path.isfile(screenshot_path)
+                    ):
                         subdomain = subdomain_query.first()
                         subdomain.screenshot_path = screenshot_path.replace(
                             "/usr/src/scan_results/", ""
@@ -1108,7 +1112,9 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                         )
                         current_img = upload(fpath, fname, existingFiles)
                         if not current_img:
-                            logger.error(f"Could not upload for subdomain id {d1.id}")
+                            logger.error(
+                                f"Could not upload for subdomain {d2.name} id {d1.id} file {fpath}"
+                            )
                         if current_img:
                             d1.screenshot_slack_file_id = current_img
                             d1.save()
@@ -1131,7 +1137,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                         prev_img = upload(fpath, fname, existingFiles)
                         if not prev_img:
                             logger.error(
-                                "Could not upload screenshot for subdomain id {d2.id}"
+                                f"Could not upload screenshot for subdomain {d2.name} id {d2.id} file {fpath}"
                             )
                         if prev_img:
                             d2.screenshot_slack_file_id = prev_img
@@ -1139,6 +1145,9 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                             logger.info(
                                 f"screenshot_slack_file_id for subdomain id {d2.id} updated in the database"
                             )
+
+                    if not current_img or not prev_img:
+                        continue
 
                     newDomainsWithScreens.append(
                         {

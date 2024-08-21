@@ -69,7 +69,7 @@ def uploadFileIfNotExists(fpath, fname, existingFiles, user=SLACK_USER):
         user,
     )
     if not exist:
-        logger.info("File does not exists")
+        logger.info("File does not exists in slack cloud")
         result = uploadFile(fpath, fname)
         logger.info(f"File uploaded, ID = {result['id']}")
         return result
