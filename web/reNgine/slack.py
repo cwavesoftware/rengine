@@ -15,7 +15,10 @@ try:
     notif = Notification.objects.all()
     if notif and notif[0]:
         SLACK_TOKEN = notif[0].slack_token
-    client = WebClient(token=SLACK_TOKEN)
+        client = WebClient(token=SLACK_TOKEN)
+        logger.info("slack client instantiated successfully")
+    else:
+        raise Exception("could not get slack settings")
 except Exception as ex:
     logger.error(ex)
 
@@ -76,6 +79,7 @@ def uploadFileIfNotExists(fpath, fname, existingFiles, user=SLACK_USER):
 
 
 def fileExists(fname, existingFiles, user=SLACK_USER):
+    return False, None  # little hack
     logger.info(f"Checking if file {fname} exists ...")
     if existingFiles:
         files = existingFiles

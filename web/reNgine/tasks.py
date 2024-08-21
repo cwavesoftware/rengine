@@ -1049,7 +1049,9 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                 logger.error(ex)
 
         if notification and notification[0].send_visual_changes_to_slack:
-            existingFiles = getFiles()
+            # getting files for each scan is overkill. the win here is insignificand compared to the cost
+            # we'd rather upload duplicates than pulling >60 pages of files each scan
+            existingFiles = []  # getFiles()
 
         for d1 in currentScanDomains:
             toAdd = False
@@ -1106,9 +1108,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                         )
                         current_img = upload(fpath, fname, existingFiles)
                         if not current_img:
-                            logger.error(
-                                f"Could not uploadAndPublish for subdomain id {d1.id}"
-                            )
+                            logger.error(f"Could not upload for subdomain id {d1.id}")
                         if current_img:
                             d1.screenshot_slack_file_id = current_img
                             d1.save()
