@@ -1098,6 +1098,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
 
             if toAdd:
                 if notification and notification[0].send_visual_changes_to_slack:
+                    current_img = prev_img = None
                     if (
                         not d1.screenshot_slack_file_id
                         or d1.screenshot_slack_file_id == ""
