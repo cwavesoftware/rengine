@@ -238,10 +238,10 @@ $(document).ready(function(){
   var slack_checkbox = document.getElementById("slack_checkbox");
   slack_checkbox.addEventListener('change', function() {
     if (this.checked) {
-      document.getElementById("slack_hook_url").readOnly = false;
+      document.getElementById("slack_token").readOnly = false;
     }
     else{
-      document.getElementById("slack_hook_url").readOnly = true;
+      document.getElementById("slack_token").readOnly = true;
     }
   });
 
