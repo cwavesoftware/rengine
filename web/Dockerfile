@@ -100,7 +100,7 @@ RUN if [ "$(arch)" = "aarch64" ]; then \
       rm geckodriver-v0.32.0-linux64.tar.gz; \
       cp geckodriver /usr/bin; \
       cp geckodriver /usr/sbin; \
-      git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/FortyNorthSecurity/EyeWitness /usr/src/github/EyeWitness; \
+      git clone --branch v20230525.1 --single-branch https://${GITHUB_USER}:${GITHUB_PASS}@github.com/FortyNorthSecurity/EyeWitness /usr/src/github/EyeWitness; \
       bash /usr/src/github/EyeWitness/Python/setup/setup.sh; \
       add-apt-repository ppa:mozillateam/ppa; \
     fi \
