@@ -1378,7 +1378,8 @@ def scanNewSubs(request, scanId):
     scan = get_object_or_404(ScanHistory, pk=scanId)
     newly_added_subdomain = get_new_added_subdomain(
             scan.id, scan.domain.id
-        ).values()
+        )
+    newly_added_subdomain = newly_added_subdomain.values() if newly_added_subdomain else []
     logging.debug(newly_added_subdomain)
     return http.JsonResponse({"error": "false", "new_subs": list(newly_added_subdomain)})
 

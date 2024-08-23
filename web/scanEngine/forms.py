@@ -261,7 +261,7 @@ class NotificationForm(forms.ModelForm):
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "id": "slack_hook_url",
+                "id": "slack_token",
                 "placeholder": "slack token (xoxb-xxxxxxxxxx-xxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxx)",
             }
         ),
@@ -436,7 +436,7 @@ class NotificationForm(forms.ModelForm):
         self.initial["send_scan_output_file"] = key.send_scan_output_file
 
         if not key.send_to_slack:
-            self.fields["slack_hook_url"].widget.attrs["readonly"] = True
+            self.fields["slack_token"].widget.attrs["readonly"] = True
         if not key.send_to_discord:
             self.fields["discord_hook_url"].widget.attrs["readonly"] = True
         if not key.send_to_telegram:

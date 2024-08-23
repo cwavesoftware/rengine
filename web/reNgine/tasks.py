@@ -15,7 +15,6 @@ import subprocess
 import time
 import sqlite3
 import urllib.parse as up
-
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium import webdriver
 from emailfinder.extractor import *
@@ -28,25 +27,21 @@ from targetApp.models import Domain
 from scanEngine.models import EngineType
 from django.conf import settings
 from django.shortcuts import get_object_or_404
-
 from celery import shared_task
 from datetime import datetime
 from degoogle import degoogle
-
 from django.utils import timezone, dateformat
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
-
 from reNgine.celery import app
 from reNgine.definitions import *
-
 from startScan.models import *
 from targetApp.models import Domain
 from scanEngine.models import EngineType, Configuration, Wordlist
-
 from .common_func import *
 from .slack import *
 from celery.utils.log import get_task_logger
+import socket
 
 """
 task for background scan
@@ -195,7 +190,7 @@ def initiate_scan(
                 )
                 update_last_activity(activity_id, 2)
         except Exception as e:
-            logger.error(e)
+            logger.exception(e)
             update_last_activity(activity_id, 0)
 
         try:
@@ -628,7 +623,10 @@ def subdomain_scan(
                         newly_added_subdomain.count(), domain.name
                     )
                     for subdomain in newly_added_subdomain:
-                        message += "\n{}".format(subdomain.name)
+                        if subdomain.ip_addresses.all():
+                            message += f"\n{subdomain.name} ({','.join(subdomain.ip_addresses.all())})"
+                        else:
+                            message += f"\n{subdomain.name}"
                 else:
                     message = f"New subdomains discovered on {domain.name} exceeds notification threshold. Something is wrong, check the subdomain discovery tools"
                     logger.info(message)
@@ -694,6 +692,7 @@ def get_new_added_subdomain(current_scan_id, domain_id, compare_with_all_scans=T
             scanned_host_q2 = (
                 Subdomain.objects.filter(target_domain__id=domain_id)
                 .filter(scan_history__id__lt=current_scan_id)
+                .filter(scan_history__scan_status=definitions.SCAN_STATUS_COMPLETED)
                 .values("name")
                 .distinct("name")
             )
@@ -1578,46 +1577,6 @@ def fetch_endpoints(task, domain, yaml_configuration, results_dir, activity_id):
     """
     Store all the endpoints and then run the httpx
     """
-    # try:
-    #     endpoint_final_url = results_dir + '/all_urls.txt'
-    #     if os.path.isfile(endpoint_final_url):
-    #         with open(endpoint_final_url) as endpoint_list:
-    #             for url in endpoint_list:
-    #                 http_url = url.rstrip('\n')
-    #                 if not EndPoint.objects.filter(scan_history=task, http_url=http_url).exists():
-    #                     _subdomain = get_subdomain_from_url(http_url)
-    #                     if Subdomain.objects.filter(
-    #                             scan_history=task).filter(
-    #                             name=_subdomain).exists():
-    #                         subdomain = Subdomain.objects.get(
-    #                             scan_history=task, name=_subdomain)
-    #                     else:
-    #                         '''
-    #                         gau or gosppider can gather interesting endpoints which
-    #                         when parsed can give subdomains that were not existent from
-    #                         subdomain scan. so storing them
-    #                         '''
-    #                         logger.warning(
-    #                             'Subdomain {} not found, adding...'.format(_subdomain))
-    #                         subdomain_dict = DottedDict({
-    #                             'scan_history': task,
-    #                             'target_domain': domain,
-    #                             'name': _subdomain,
-    #                         })
-    #                         subdomain = save_subdomain(subdomain_dict)
-    #                     endpoint_dict = DottedDict({
-    #                         'scan_history': task,
-    #                         'target_domain': domain,
-    #                         'subdomain': subdomain,
-    #                         'http_url': http_url,
-    #                     })
-    #                     save_endpoint(endpoint_dict)
-    # except Exception as e:
-    #     logger.error(e)
-
-    # if notification and notification[0].send_scan_output_file:
-    #     send_files_to_discord(results_dir + '/all_urls.txt')
-
     logger.info("HTTP Probing on collected endpoints")
 
     httpx_command = "httpx -l {0}/all_urls.txt -status-code -content-length -ip -cdn -title -tech-detect -json -follow-redirects -random-agent -o {0}/final_httpx_urls.json -silent 1>/dev/null".format(
@@ -2119,6 +2078,21 @@ def delete_scan_data(results_dir):
     os.system('find {} -name "*.json" -type f -delete'.format(results_dir))
 
 
+def save_subdomain_ips(subdomain):
+    logger.debug(f"getting ips for {subdomain.name} ...")
+    try:
+        (name, _, ips) = socket.gethostbyname_ex(subdomain.name)
+        for ip in ips:
+            if IpAddress.objects.filter(address=ip).exists():
+                ipobj = IpAddress.objects.get(address=ip)
+            else:
+                ipobj = IpAddress(address=ip)
+            ipobj.save()
+            subdomain.ip_addresses.add(ipobj)
+        logger.debug(f"{subdomain.name} resolves to {','.join(ips)}")
+    except Exception as ex:
+        logger.warning(ex)
+
 def save_subdomain(subdomain_dict):
     subdomain = Subdomain()
     subdomain.discovered_date = timezone.now()
@@ -2150,6 +2124,7 @@ def save_subdomain(subdomain_dict):
         subdomain.content_length = subdomain_dict.get("content_length")
 
     subdomain.save()
+    save_subdomain_ips(subdomain)
     return subdomain
 
 
@@ -2617,6 +2592,7 @@ def get_and_save_meta_info(meta_dict):
                 subdomain.scan_history = meta_dict.scan_id
                 subdomain.name = meta_dict.osint_target
                 subdomain.save()
+                save_subdomain_ips(subdomain)
 
             meta_finder_document.subdomain = subdomain
             meta_finder_document.target_domain = meta_dict.domain
