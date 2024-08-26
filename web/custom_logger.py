@@ -6,7 +6,7 @@ import os
 class NotifyLogHandler(logging.Handler):
     def __init__(self):
         super().__init__()
-        self.setLevel(logging.DEBUG)
+        self.setLevel(logging.ERROR)
 
     def emit(self, record):
         log_entry = self.format(record)
