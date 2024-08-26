@@ -48,6 +48,7 @@ services:
       - POSTGRES_HOST=${POSTGRES_HOST}
       - TZ=${TIMEZONE?TIMEZONE_NOT_DEFINED}
       - RENGINE_URL=${RENGINE_URL?RENGINE_URL_NOT_DEFINED}
+      - SLACK_ERROR_LOG_CHANNEL=${SLACK_ERROR_LOG_CHANNEL}
     depends_on:
       - db
       - redis
