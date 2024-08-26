@@ -1911,8 +1911,8 @@ def vulnerability_scan(task, domain, yaml_configuration, results_dir, activity_i
                                 scan_history=task, target_domain=domain, http_url=host
                             )
                             vulnerability.endpoint = endpoint
-                        except Exception as exception:
-                            logger.error(exception)
+                        except EndPoint.DoesNotExist as exception:
+                            logger.warning(exception)
                         if "name" in json_st["info"]:
                             vulnerability.name = json_st["info"]["name"]
                         if "severity" in json_st["info"]:
@@ -2092,6 +2092,7 @@ def save_subdomain_ips(subdomain):
         logger.debug(f"{subdomain.name} resolves to {','.join(ips)}")
     except Exception as ex:
         logger.warning(ex)
+
 
 def save_subdomain(subdomain_dict):
     subdomain = Subdomain()
