@@ -187,12 +187,12 @@ def send_telegram_message(message):
         thread.start()
 
 
-def send_slack_message(message, raw=False):
+def send_slack_message(message, raw=False, channel=None):
     notification = Notification.objects.all()
     if notification and notification[0].send_to_slack:
         payload = {
             "token": notification[0].slack_token,
-            "channel": notification[0].slack_channel_id,
+            "channel": channel if channel else notification[0].slack_channel_id,
         }
         if raw:
             payload["blocks"] = json.dumps(json.loads(message)["blocks"])

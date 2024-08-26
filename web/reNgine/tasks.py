@@ -42,12 +42,14 @@ from .common_func import *
 from .slack import *
 from celery.utils.log import get_task_logger
 import socket
+from custom_logger import NotifyLogHandler
 
 """
 task for background scan
 """
 
 logger = get_task_logger(__name__)
+logger.addHandler(NotifyLogHandler())
 
 
 @app.task
