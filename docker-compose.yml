@@ -23,7 +23,7 @@ services:
   celery:
     build:
       context: ./web
-    image: cwavesoftware/rengine-celery:latest
+    image: cwavesoftware/rengine-web:latest
     restart: always
     mem_limit: "8g"
     mem_reservation: "4g"
@@ -58,7 +58,7 @@ services:
         max-file: "10"
 
   celery-beat:
-    image: cwavesoftware/rengine-celery:latest
+    image: cwavesoftware/rengine-web:latest
     restart: always
     entrypoint: /usr/src/app/beat-entrypoint.sh
     command: celery -A reNgine beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
@@ -85,7 +85,7 @@ services:
       - tool_config:/root/.config
 
   web:
-    image: cwavesoftware/rengine-celery:latest
+    image: cwavesoftware/rengine-web:latest
     entrypoint: /usr/src/app/entrypoint.sh
     restart: always
     mem_limit: "8g"
