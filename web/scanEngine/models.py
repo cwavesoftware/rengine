@@ -1,3 +1,4 @@
+from requests.models import default_hooks
 from django.db import models
 
 
@@ -74,13 +75,15 @@ class Notification(models.Model):
     send_scan_status_notif = models.BooleanField(default=True)
     send_interesting_notif = models.BooleanField(default=True)
     send_vuln_notif = models.BooleanField(default=True)
-    send_subdomain_changes_notif = models.BooleanField(default=True)
+    send_new_subdomains_notif = models.BooleanField(default=True)
     send_removed_subdomains_notif = models.BooleanField(default=False)
     send_visual_changes_notif = models.BooleanField(default=True)
 
     send_scan_output_file = models.BooleanField(default=True)
-    notif_threshold = models.IntegerField(null=True, blank=True)
+    percentage_threshold = models.IntegerField(null=False, blank=False, default=100)
+    absolute_threshold = models.IntegerField(null=False, blank=False, default=10)
     send_visual_changes_to_slack = models.BooleanField(default=False)
+    visual_comparison_threshold = models.IntegerField(null=False, blank=False, default=70)
 
 
 class Proxy(models.Model):

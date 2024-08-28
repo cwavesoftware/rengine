@@ -60,7 +60,6 @@ VALIDATE_SUBDOMAINS = "validate_subdomains"
 FILTER_STATUS_CODE = "filter_status_code"
 SCREENSHOT_SKIP_THESE_SITES = "skip_these_sites"
 SCREENSHOT_SKIP_THESE_CODES = "skip_these_codes"
-ABSOLUTE_THRESHOLD = "absolute_threshold"
 
 ###############################################################################
 # Wordlist DEFINITIONS

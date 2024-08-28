@@ -11,8 +11,10 @@
     screenshot: true
     yaml_configuration: "subdomain_discovery:\r\n  uses_tools: [ amass-passive, assetfinder,
       sublist3r, subfinder, oneforall ]\r\n  threads: 10\r\n  use_amass_config: false\r\n
-      \ use_subfinder_config: false\r\n\r\nvisual_identification:\r\n  timeout: 10\r\n
-      \ threads: 5\r\n\r\nosint:\r\n  discover: [ emails, metainfo, employees ]\r\n
+      \ use_subfinder_config: false\r\n  compare_with: all_scans\r\n
+      \ validate_subdomains: false\r\n\r\nvisual_identification:\r\n  uses_tools: [ eyewitness ]\r\n  timeout: 10\r\n
+      \ threads: 5\r\n  delay: 6\r\n  skip_these_sites: []\r\n  skip_these_codes: []\r\n\r\n
+      osint:\r\n  discover: [ emails, metainfo, employees ]\r\n
       \ intensity: normal\r\n  # intensity: deep\r\n  dork: [ stackoverflow, 3rdparty,
       social_media, project_management, code_sharing, config_files, jenkins, wordpress_files,
       cloud_buckets, php_error, exposed_documents, struts_rce, db_files, traefik,
@@ -31,32 +33,19 @@
 - model: scanEngine.enginetype
   pk: 2
   fields:
-    engine_name: Subdomain Only Scan
+    engine_name: Daily
     subdomain_discovery: true
+    screenshot: true
     dir_file_search: false
     port_scan: false
     fetch_url: false
     vulnerability_scan: false
     osint: false
-    screenshot: true
-    yaml_configuration: "subdomain_discovery:\r\n  uses_tools: [ amass-passive, assetfinder,
-      sublist3r, subfinder, oneforall ]\r\n  threads: 10\r\n  use_amass_config: false\r\n
-      \ use_subfinder_config: false\r\n\r\nvisual_identification:\r\n  timeout: 10\r\n
-      \ threads: 5\r\n\r\nosint:\r\n  discover: [ emails, metainfo, employees ]\r\n
-      \ intensity: normal\r\n  # intensity: deep\r\n  dork: [ stackoverflow, 3rdparty,
-      social_media, project_management, code_sharing, config_files, jenkins, wordpress_files,
-      cloud_buckets, php_error, exposed_documents, struts_rce, db_files, traefik,
-      git_exposed ]\r\n\r\nport_scan:\r\n  ports: [ top-100 ]\r\n  rate: 1000\r\n
-      \ use_naabu_config: false\r\n  # exclude_ports: [80, 8080]\r\n\r\ndir_file_search:\r\n
-      \ extensions: [ php, git, yaml, conf, db, mysql, bak, asp, aspx, txt, conf,
-      sql, json ]\r\n  threads: 100\r\n  recursive: false\r\n  recursive_level: 1\r\n
-      \ wordlist: default\r\n\r\nfetch_url:\r\n  uses_tools: [ gauplus, hakrawler,
-      waybackurls, gospider ]\r\n  intensity: normal\r\n  # intensity: deep\r\n  ignore_file_extension:
-      [jpg, png, jpeg, gif]\r\n  gf_patterns: [ debug_logic, idor, img-traversal,
-      interestingEXT, interestingparams, interestingsubs, jsvar, lfi, rce, redirect,
-      sqli, ssrf, ssti, xss]\r\n\r\nvulnerability_scan:\r\n  concurrency: 10\r\n  rate_limit:
-      150\r\n  timeout: 5\r\n  retries: 1\r\n  templates: [ all ]\r\n  # custom_templates:
-      []\r\n  severity: [ critical, high, medium, low, info ]"
+    yaml_configuration: "subdomain_discovery:\r\n  uses_tools: [ subfinder ]\r\n  threads: 10\r\n
+      \ use_amass_config: false\r\n
+      \ use_subfinder_config: false\r\n  compare_with: all_scans\r\n
+      \ validate_subdomains: false\r\n\r\nvisual_identification:\r\n  uses_tools: [ eyewitness ]\r\n  timeout: 10\r\n
+      \ threads: 5\r\n  delay: 6\r\n  skip_these_sites: []\r\n  skip_these_codes: []"
     default_engine: true
 - model: scanEngine.enginetype
   pk: 3
@@ -69,52 +58,24 @@
     vulnerability_scan: false
     osint: true
     screenshot: false
-    yaml_configuration: "subdomain_discovery:\r\n  uses_tools: [ amass-passive, assetfinder,
-      sublist3r, subfinder, oneforall ]\r\n  threads: 10\r\n  use_amass_config: false\r\n
-      \ use_subfinder_config: false\r\n\r\nvisual_identification:\r\n  timeout: 10\r\n
-      \ threads: 5\r\n\r\nosint:\r\n  discover: [ emails, metainfo, employees ]\r\n
+    yaml_configuration: "osint:\r\n  discover: [ emails, metainfo, employees ]\r\n
       \ intensity: normal\r\n  # intensity: deep\r\n  dork: [ stackoverflow, 3rdparty,
       social_media, project_management, code_sharing, config_files, jenkins, wordpress_files,
       cloud_buckets, php_error, exposed_documents, struts_rce, db_files, traefik,
-      git_exposed ]\r\n\r\nport_scan:\r\n  ports: [ top-100 ]\r\n  rate: 1000\r\n
-      \ use_naabu_config: false\r\n  # exclude_ports: [80, 8080]\r\n\r\ndir_file_search:\r\n
-      \ extensions: [ php, git, yaml, conf, db, mysql, bak, asp, aspx, txt, conf,
-      sql, json ]\r\n  threads: 100\r\n  recursive: false\r\n  recursive_level: 1\r\n
-      \ wordlist: default\r\n\r\nfetch_url:\r\n  uses_tools: [ gauplus, hakrawler,
-      waybackurls, gospider ]\r\n  intensity: normal\r\n  # intensity: deep\r\n  ignore_file_extension:
-      [jpg, png, jpeg, gif]\r\n  gf_patterns: [ debug_logic, idor, img-traversal,
-      interestingEXT, interestingparams, interestingsubs, jsvar, lfi, rce, redirect,
-      sqli, ssrf, ssti, xss]\r\n\r\nvulnerability_scan:\r\n  concurrency: 10\r\n  rate_limit:
-      150\r\n  timeout: 5\r\n  retries: 1\r\n  templates: [ all ]\r\n  # custom_templates:
-      []\r\n  severity: [ critical, high, medium, low, info ]"
+      git_exposed ]\r\n\r\n"
     default_engine: true
 - model: scanEngine.enginetype
   pk: 4
   fields:
     engine_name: Vulnerability Scan Only (Normal)
-    subdomain_discovery: true
+    subdomain_discovery: false
     dir_file_search: false
     port_scan: false
     fetch_url: false
     vulnerability_scan: true
     osint: false
     screenshot: false
-    yaml_configuration: "subdomain_discovery:\r\n  uses_tools: [ amass-passive, assetfinder,
-      sublist3r, subfinder, oneforall ]\r\n  threads: 10\r\n  use_amass_config: false\r\n
-      \ use_subfinder_config: false\r\n\r\nvisual_identification:\r\n  timeout: 10\r\n
-      \ threads: 5\r\n\r\nosint:\r\n  discover: [ emails, metainfo, employees ]\r\n
-      \ intensity: normal\r\n  # intensity: deep\r\n  dork: [ stackoverflow, 3rdparty,
-      social_media, project_management, code_sharing, config_files, jenkins, wordpress_files,
-      cloud_buckets, php_error, exposed_documents, struts_rce, db_files, traefik,
-      git_exposed ]\r\n\r\nport_scan:\r\n  ports: [ top-100 ]\r\n  rate: 1000\r\n
-      \ use_naabu_config: false\r\n  # exclude_ports: [80, 8080]\r\n\r\ndir_file_search:\r\n
-      \ extensions: [ php, git, yaml, conf, db, mysql, bak, asp, aspx, txt, conf,
-      sql, json ]\r\n  threads: 100\r\n  recursive: false\r\n  recursive_level: 1\r\n
-      \ wordlist: default\r\n\r\nfetch_url:\r\n  uses_tools: [ gauplus, hakrawler,
-      waybackurls, gospider ]\r\n  intensity: normal\r\n  # intensity: deep\r\n  ignore_file_extension:
-      [jpg, png, jpeg, gif]\r\n  gf_patterns: [ debug_logic, idor, img-traversal,
-      interestingEXT, interestingparams, interestingsubs, jsvar, lfi, rce, redirect,
-      sqli, ssrf, ssti, xss]\r\n\r\nvulnerability_scan:\r\n  concurrency: 10\r\n  rate_limit:
+    yaml_configuration: "vulnerability_scan:\r\n  concurrency: 10\r\n  rate_limit:
       150\r\n  timeout: 5\r\n  retries: 1\r\n  templates: [ all ]\r\n  # custom_templates:
       []\r\n  severity: [ critical, high, medium, low, info ]"
     default_engine: true
@@ -122,25 +83,14 @@
   pk: 5
   fields:
     engine_name: Vulnerability Scan (Deep)
-    subdomain_discovery: true
+    subdomain_discovery: false 
     dir_file_search: false
     port_scan: false
     fetch_url: true
     vulnerability_scan: true
     osint: false
     screenshot: false
-    yaml_configuration: "subdomain_discovery:\r\n  uses_tools: [ amass-passive, assetfinder,
-      sublist3r, subfinder, oneforall ]\r\n  threads: 10\r\n  use_amass_config: false\r\n
-      \ use_subfinder_config: false\r\n\r\nvisual_identification:\r\n  timeout: 10\r\n
-      \ threads: 5\r\n\r\nosint:\r\n  discover: [ emails, metainfo, employees ]\r\n
-      \ intensity: normal\r\n  # intensity: deep\r\n  dork: [ stackoverflow, 3rdparty,
-      social_media, project_management, code_sharing, config_files, jenkins, wordpress_files,
-      cloud_buckets, php_error, exposed_documents, struts_rce, db_files, traefik,
-      git_exposed ]\r\n\r\nport_scan:\r\n  ports: [ top-100 ]\r\n  rate: 1000\r\n
-      \ use_naabu_config: false\r\n  # exclude_ports: [80, 8080]\r\n\r\ndir_file_search:\r\n
-      \ extensions: [ php, git, yaml, conf, db, mysql, bak, asp, aspx, txt, conf,
-      sql, json ]\r\n  threads: 100\r\n  recursive: false\r\n  recursive_level: 1\r\n
-      \ wordlist: default\r\n\r\nfetch_url:\r\n  uses_tools: [ gauplus, hakrawler,
+    yaml_configuration: "fetch_url:\r\n  uses_tools: [ gauplus, hakrawler,
       waybackurls, gospider ]\r\n  intensity: deep\r\n  ignore_file_extension: [jpg,
       png, jpeg, gif]\r\n  gf_patterns: [ debug_logic, idor, img-traversal, interestingEXT,
       interestingparams, interestingsubs, jsvar, lfi, rce, redirect, sqli, ssrf, ssti,
@@ -151,30 +101,38 @@
 - model: scanEngine.enginetype
   pk: 6
   fields:
-    engine_name: reNgine Recommended
+    engine_name: Weekly
     subdomain_discovery: true
-    dir_file_search: false
-    port_scan: true
-    fetch_url: false
-    vulnerability_scan: true
-    osint: true
     screenshot: true
-    yaml_configuration: "subdomain_discovery:\r\n  uses_tools: [ amass-passive, assetfinder,
-      sublist3r, subfinder, oneforall ]\r\n  threads: 10\r\n  use_amass_config: false\r\n
-      \ use_subfinder_config: false\r\n\r\nvisual_identification:\r\n  timeout: 10\r\n
-      \ threads: 5\r\n\r\nosint:\r\n  discover: [ emails, metainfo, employees ]\r\n
-      \ intensity: normal\r\n  # intensity: deep\r\n  dork: [ stackoverflow, 3rdparty,
-      social_media, project_management, code_sharing, config_files, jenkins, wordpress_files,
-      cloud_buckets, php_error, exposed_documents, struts_rce, db_files, traefik,
-      git_exposed ]\r\n\r\nport_scan:\r\n  ports: [ top-100 ]\r\n  rate: 1000\r\n
-      \ use_naabu_config: false\r\n  # exclude_ports: [80, 8080]\r\n\r\ndir_file_search:\r\n
-      \ extensions: [ php, git, yaml, conf, db, mysql, bak, asp, aspx, txt, conf,
-      sql, json ]\r\n  threads: 100\r\n  recursive: false\r\n  recursive_level: 1\r\n
-      \ wordlist: default\r\n\r\nfetch_url:\r\n  uses_tools: [ gauplus, hakrawler,
+    osint: false
+    port_scan: false
+    dir_file_search: false
+    fetch_url: true
+    vulnerability_scan: true
+    yaml_configuration: "subdomain_discovery:\r\n  uses_tools: [ subfinder ]\r\n  threads: 10\r\n
+      \ use_amass_config: false\r\n
+      \ use_subfinder_config: false\r\n  compare_with: all_scans\r\n
+      \ validate_subdomains: false\r\n\r\nvisual_identification:\r\n  uses_tools: [ eyewitness ]\r\n  timeout: 10\r\n
+      \ threads: 5\r\n  delay: 6\r\n  skip_these_sites: []\r\n  skip_these_codes: []\r\n\r\nfetch_url:\r\n
+      \ uses_tools: [ gauplus, hakrawler,
       waybackurls, gospider ]\r\n  intensity: normal\r\n  # intensity: deep\r\n  ignore_file_extension:
       [jpg, png, jpeg, gif]\r\n  gf_patterns: [ debug_logic, idor, img-traversal,
       interestingEXT, interestingparams, interestingsubs, jsvar, lfi, rce, redirect,
       sqli, ssrf, ssti, xss]\r\n\r\nvulnerability_scan:\r\n  concurrency: 10\r\n  rate_limit:
       150\r\n  timeout: 5\r\n  retries: 1\r\n  templates: [ all ]\r\n  # custom_templates:
-      []\r\n  severity: [ critical, high, medium, low, info ]"
+      []\r\n  severity: [ critical, high, medium ]"
     default_engine: true
+- model: scanEngine.enginetype
+  pk: 7
+  fields:
+    engine_name: Debug
+    subdomain_discovery: false
+    screenshot: false
+    osint: false
+    port_scan: false
+    dir_file_search: false
+    fetch_url: false
+    vulnerability_scan: false
+    yaml_configuration: ""
+    default_engine: true
+

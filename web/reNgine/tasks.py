@@ -576,7 +576,7 @@ def subdomain_scan(
 
     # check for any subdomain changes and send notif if any
     if notification and (
-        notification[0].send_subdomain_changes_notif
+        notification[0].send_new_subdomains_notif
         or notification[0].send_removed_subdomains_notif
     ):
         compare_with_all_scans = (
@@ -586,16 +586,12 @@ def subdomain_scan(
         newly_added_subdomain = get_new_added_subdomain(
             task.id, domain.id, compare_with_all_scans
         )
-        absolute_threshold = -1
-        if ABSOLUTE_THRESHOLD in yaml_configuration[SUBDOMAIN_DISCOVERY]:
-            absolute_threshold = yaml_configuration[SUBDOMAIN_DISCOVERY][
-                ABSOLUTE_THRESHOLD
-            ]
+        absolute_threshold = notification[0].absolute_threshold
 
         if newly_added_subdomain:
             threshold = (
-                notification[0].notif_threshold
-                if notification[0].notif_threshold
+                notification[0].percentage_threshold
+                if notification[0].percentage_threshold
                 else 100
             )
             if compare_with_all_scans:
@@ -617,7 +613,7 @@ def subdomain_scan(
                 f"Threshold = {threshold}. Comparing with {newly_added_subdomain.count()} new subdomains found"
             )
 
-            if notification[0].send_subdomain_changes_notif:
+            if notification[0].send_new_subdomains_notif:
                 if (
                     (newly_added_subdomain.count()) < (to_compare * threshold) / 100
                 ) or (newly_added_subdomain.count() < absolute_threshold):
@@ -1019,20 +1015,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         ).exclude(screenshot_path__isnull=True)
         newDomainsWithScreens = []
 
-        threshold = 50
-        if (
-            VISUAL_IDENTIFICATION in yaml_configuration
-            and SCREENSHOT_COMPARISON_THRESHOLD
-            in yaml_configuration[VISUAL_IDENTIFICATION]
-            and yaml_configuration[VISUAL_IDENTIFICATION][
-                SCREENSHOT_COMPARISON_THRESHOLD
-            ]
-            > 0
-        ):
-            threshold = yaml_configuration[VISUAL_IDENTIFICATION][
-                SCREENSHOT_COMPARISON_THRESHOLD
-            ]
-
+        threshold = notification[0].visual_comparison_threshold if notification else 70
         skip_these_sites = []
         skip_these_codes = []
         if SCREENSHOT_SKIP_THESE_SITES in yaml_configuration[VISUAL_IDENTIFICATION]:
@@ -1169,8 +1152,8 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         logger.info(f"New domains have screenshots: {newDomainsWithScreens}")
 
         threshold = (
-            notification[0].notif_threshold
-            if notification and notification[0].notif_threshold
+            notification[0].percentage_threshold
+            if notification and notification[0].percentage_threshold
             else 100
         )
 
@@ -1190,7 +1173,6 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
 
                 if notification[0].send_visual_changes_to_slack:
                     message = header
-                    # send_notification(message)
 
                     try:
                         with open(

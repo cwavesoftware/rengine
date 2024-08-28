@@ -361,22 +361,30 @@ class NotificationForm(forms.ModelForm):
         ),
     )
 
-    send_subdomain_changes_notif = forms.BooleanField(
+    send_new_subdomains_notif = forms.BooleanField(
         required=False,
         widget=forms.CheckboxInput(
             attrs={
                 "class": "custom-control-input",
-                "id": "send_subdomain_changes_notif",
+                "id": "send_new_subdomains_notif",
             }
         ),
     )
 
-    notif_threshold = forms.IntegerField(
-        required=False,
+    percentage_threshold = forms.IntegerField(
+        required=True,
         widget=forms.NumberInput(
-            attrs={"class": "custom-control custom-range", "id": "notif_threshold"}
+            attrs={"class": "custom-control custom-range", "id": "percentage_threshold"}
         ),
     )
+   
+    absolute_threshold = forms.IntegerField(
+        required=True,
+        widget=forms.NumberInput(
+            attrs={"class": "custom-control custom-range", "id": "absolute_threshold"}
+        ),
+    )
+
     send_removed_subdomains_notif = forms.BooleanField(
         required=False,
         widget=forms.CheckboxInput(
@@ -417,6 +425,13 @@ class NotificationForm(forms.ModelForm):
         ),
     )
 
+    visual_comparison_threshold = forms.IntegerField(
+        required=True,
+        widget=forms.NumberInput(
+            attrs={"class": "custom-control custom-range", "id": "visual_comparison_threshold"}
+        ),
+    )
+
     def set_value(self, key):
         self.initial["send_to_slack"] = key.send_to_slack
         self.initial["send_to_discord"] = key.send_to_discord
@@ -431,7 +446,7 @@ class NotificationForm(forms.ModelForm):
         self.initial["send_scan_status_notif"] = key.send_scan_status_notif
         self.initial["send_interesting_notif"] = key.send_interesting_notif
         self.initial["send_vuln_notif"] = key.send_vuln_notif
-        self.initial["send_subdomain_changes_notif"] = key.send_subdomain_changes_notif
+        self.initial["send_new_subdomains_notif"] = key.send_new_subdomains_notif
 
         self.initial["send_scan_output_file"] = key.send_scan_output_file
 
@@ -443,12 +458,14 @@ class NotificationForm(forms.ModelForm):
             self.fields["telegram_bot_token"].widget.attrs["readonly"] = True
             self.fields["telegram_bot_chat_id"].widget.attrs["readonly"] = True
 
-        self.initial["notif_threshold"] = key.notif_threshold
+        self.initial["percentage_threshold"] = key.percentage_threshold
+        self.initial["absolute_threshold"] = key.absolute_threshold
         self.initial["send_removed_subdomains_notif"] = (
             key.send_removed_subdomains_notif
         )
         self.initial["send_visual_changes_notif"] = key.send_visual_changes_notif
         self.initial["send_visual_changes_to_slack"] = key.send_visual_changes_to_slack
+        self.initial["visual_comparison_threshold"] = key.visual_comparison_threshold
 
     def set_initial(self):
         self.initial["send_to_slack"] = False
@@ -464,13 +481,15 @@ class NotificationForm(forms.ModelForm):
         self.initial["send_scan_status_notif"] = True
         self.initial["send_interesting_notif"] = True
         self.initial["send_vuln_notif"] = True
-        self.initial["send_subdomain_changes_notif"] = True
+        self.initial["send_new_subdomains_notif"] = True
 
         self.initial["send_scan_output_file"] = True
-        self.initial["notif_threshold"] = 0
+        self.initial["percentage_threshold"] = 0
+        self.initial["absolute_threshold"] = 10
         self.initial["send_removed_subdomains_notif"] = False
         self.initial["send_visual_changes_notif"] = False
         self.initial["send_visual_changes_to_slack"] = False
+        self.initial["visual_comparison_threshold"] = 70
 
 
 class ProxyForm(forms.ModelForm):

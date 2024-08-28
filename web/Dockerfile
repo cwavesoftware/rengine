@@ -100,7 +100,7 @@ RUN if [ "$(arch)" = "aarch64" ]; then \
       rm geckodriver-v0.32.0-linux64.tar.gz; \
       cp geckodriver /usr/bin; \
       cp geckodriver /usr/sbin; \
-      git clone --branch v20230525.1 --single-branch https://${GITHUB_USER}:${GITHUB_PASS}@github.com/FortyNorthSecurity/EyeWitness /usr/src/github/EyeWitness; \
+      git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/FortyNorthSecurity/EyeWitness /usr/src/github/EyeWitness; \
       bash /usr/src/github/EyeWitness/Python/setup/setup.sh; \
       add-apt-repository ppa:mozillateam/ppa; \
     fi \
@@ -145,6 +145,8 @@ RUN git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/1ndianl33t/Gf-Pat
 RUN mv /root/Gf-Patterns/*.json /root/.gf
 
 RUN mkdir /usr/src/scan_results
+COPY ./mozilla-firefox /etc/apt/preferences.d/mozilla-firefox
+RUN apt update -y && apt install firefox -y --allow-downgrades
 
 # Copy source code
 COPY ./tools /usr/src/app/tools

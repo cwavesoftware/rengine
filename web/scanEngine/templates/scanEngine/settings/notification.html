@@ -142,6 +142,7 @@ reNgine Settings
                 </label>
               </div>
             </div>
+
             <div class="form-check pl-0 mt-1">
               <div class="custom-control custom-checkbox checkbox-info">
                 {{form.send_removed_subdomains_notif}}
@@ -154,6 +155,7 @@ reNgine Settings
                 </label>
               </div>
             </div>
+
             <div class="form-check pl-0 mt-1">
               <div class="custom-control custom-checkbox checkbox-info">
                 {{form.send_visual_changes_notif}}
@@ -166,6 +168,41 @@ reNgine Settings
                 </label>
               </div>
             </div>
+            
+            <div class="pl-0 mt-1">
+              <div class="custom-control">
+                <label class="text-dark" for="visual_changes_threshold">
+                  Visual Comparison Threshold
+                  <br>
+                {{form.visual_comparison_threshold}}
+                  <span class="text-muted">
+                    (is a visual change if screenshots differ by this percentage)
+                  </span>
+                </label>
+              </div>
+             </div>
+
+            <div class="pl-0 mt-1">
+              <div class="custom-control">
+                <label class="text-dark" for="notif_threshold">
+                  Percentage Threshold 
+                  <br>
+                {{form.percentage_threshold}}
+                  <span class="text-muted">
+                    (send notification only if # of changed subdomains is less than this %)
+                  </span>
+                </label>
+                <label class="text-dark" for="absolute_threshold">
+                  Absolute Threshold
+                  <br>
+                {{form.absolute_threshold}}
+                  <span class="text-muted">
+                    (send notification if # of changed subdomains is less than this, no matter the % threshold)
+                  </span>
+                </label>
+              </div>
+            </div>
+
             <div class="form-check pl-0 mt-1">
               <div class="custom-control custom-checkbox checkbox-info">
                 {{form.send_visual_changes_to_slack}}
@@ -178,19 +215,7 @@ reNgine Settings
                 </label>
               </div>
             </div>
-            <div class="pl-0 mt-1">
-              <div class="custom-control">
-                <label class="text-dark" for="notif_threshold">
-                  Notification Threshold (value 'x')
-                  <br>
-                {{form.notif_threshold}}
-                  <span class="text-muted">
-                    (e.g. send notification only if subdomains changed less than x%. 100 means no threshold)
-                  </span>
-                </label>
-              </div>
-            </div>
-          </div>
+
         </div>
       </fieldset>
       <fieldset class="form-group mb-4">
