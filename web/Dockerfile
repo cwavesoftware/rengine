@@ -145,7 +145,10 @@ RUN git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/1ndianl33t/Gf-Pat
 RUN mv /root/Gf-Patterns/*.json /root/.gf
 
 RUN mkdir /usr/src/scan_results
-COPY ./mozilla-firefox /etc/apt/preferences.d/mozilla-firefox
+
+# firefox
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A6DCF7707EBC211F
+RUN apt-add-repository "deb http://ppa.launchpad.net/ubuntu-mozilla-security/ppa/ubuntu focal main"
 RUN apt update -y && apt install firefox -y --allow-downgrades
 
 # Copy source code
