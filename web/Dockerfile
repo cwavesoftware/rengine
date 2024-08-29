@@ -94,7 +94,7 @@ RUN if [ "$(arch)" = "aarch64" ]; then \
       git clone --branch v20230525.1 --single-branch https://${GITHUB_USER}:${GITHUB_PASS}@github.com/FortyNorthSecurity/EyeWitness /usr/src/github/EyeWitness; \
       bash /usr/src/github/EyeWitness/Python/setup/setup.sh; \
       pip uninstall --no-input -y selenium; \
-      pip install --no-input -y selenium==4.9.2; \
+      pip install selenium==4.9.1; \
     fi \
     && wget https://golang.org/dl/go${GO_VERSION}.tar.gz \
     && tar -xvf go${GO_VERSION}.tar.gz \
