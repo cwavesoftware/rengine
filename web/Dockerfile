@@ -140,7 +140,7 @@ RUN mkdir /usr/src/scan_results
 
 # firefox
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A6DCF7707EBC211F
-RUN apt-add-repository "deb http://ppa.launchpad.net/ubuntu-mozilla-security/ppa/ubuntu focal main"
+RUN add-apt-repository ppa:mozillateam/ppa
 RUN echo 'Package: *\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 1001\n\nPackage: firefox\nPin: version 1:1snap*\nPin-Priority: -1' | tee /etc/apt/preferences.d/mozilla-firefox
 RUN apt update -y && apt install firefox -y --allow-downgrades
 
