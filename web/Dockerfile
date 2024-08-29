@@ -52,35 +52,26 @@ RUN apt update -y && apt install -y --no-install-recommends \
 RUN apt install -y software-properties-common \
     && add-apt-repository ppa:deadsnakes/ppa \
     && apt update -y \
-    && apt install -y python3.8 \
-    && apt install -y python3.8-dev
-RUN apt install -y python3.8-distutils
+    && apt install -y python3.10-dev
+RUN apt install -y python3.10-distutils
 RUN wget https://bootstrap.pypa.io/get-pip.py \
-    && python3.8 get-pip.py
-RUN python3.8 -m pip install netaddr
-
-# Copy requirements
+    && python3 get-pip.py
 COPY ./requirements.txt /tmp/requirements.txt
-RUN python3.8 -m pip install --upgrade setuptools pip && \
-    python3.8 -m pip install -r /tmp/requirements.txt
-
-RUN python3.8 -m pip install fuzzywuzzy \
-    selenium \
-    python-Levenshtein \
-    pyvirtualdisplay
+RUN python3 -m pip install --upgrade setuptools pip && \
+    python3 -m pip install --no-build-isolation -r /tmp/requirements.txt
 
 # python 3.10 is default on ubuntu 22.04
-RUN python3.10 -V
+RUN python3 -V
 RUN git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/maurosoria/dirsearch /usr/src/github/dirsearch
-RUN python3.8 -m pip install -r /usr/src/github/dirsearch/requirements.txt
+RUN python3 -m pip install -r /usr/src/github/dirsearch/requirements.txt
 RUN git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/aboul3la/Sublist3r /usr/src/github/Sublist3r
-RUN python3.8 -m pip install -r /usr/src/github/Sublist3r/requirements.txt
+RUN python3 -m pip install -r /usr/src/github/Sublist3r/requirements.txt
 RUN git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/shmilylty/OneForAll /usr/src/github/OneForAll
-RUN python3.8 -m pip install -r /usr/src/github/OneForAll/requirements.txt
+RUN python3 -m pip install -r /usr/src/github/OneForAll/requirements.txt
 RUN git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/laramies/theHarvester /usr/src/github/theHarvester
 
-RUN python3.10 get-pip.py
-RUN python3.10 -m pip install -r /usr/src/github/theHarvester/requirements/base.txt
+RUN python3 get-pip.py
+RUN python3 -m pip install -r /usr/src/github/theHarvester/requirements/base.txt
 RUN git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/davidtavarez/pwndb /usr/src/github/pwndb
 
 # go
@@ -100,9 +91,12 @@ RUN if [ "$(arch)" = "aarch64" ]; then \
       rm geckodriver-v0.32.0-linux64.tar.gz; \
       cp geckodriver /usr/bin; \
       cp geckodriver /usr/sbin; \
-      git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/FortyNorthSecurity/EyeWitness /usr/src/github/EyeWitness; \
+      git clone --branch v20230525.1 --single-branch https://${GITHUB_USER}:${GITHUB_PASS}@github.com/FortyNorthSecurity/EyeWitness /usr/src/github/EyeWitness; \
       bash /usr/src/github/EyeWitness/Python/setup/setup.sh; \
-      add-apt-repository ppa:mozillateam/ppa; \
+      # EyeWitness setup.sh installs the latest version of selenium which has a breaking change
+      # so we downgrade to 4.9.1
+      pip uninstall selenium; \
+      pip install selenium==4.9.2; \
     fi \
     && wget https://golang.org/dl/go${GO_VERSION}.tar.gz \
     && tar -xvf go${GO_VERSION}.tar.gz \
@@ -149,6 +143,7 @@ RUN mkdir /usr/src/scan_results
 # firefox
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A6DCF7707EBC211F
 RUN apt-add-repository "deb http://ppa.launchpad.net/ubuntu-mozilla-security/ppa/ubuntu focal main"
+RUN echo 'Package: *\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 1001\n\nPackage: firefox\nPin: version 1:1snap*\nPin-Priority: -1' | tee /etc/apt/preferences.d/mozilla-firefox
 RUN apt update -y && apt install firefox -y --allow-downgrades
 
 # Copy source code

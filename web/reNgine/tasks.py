@@ -479,7 +479,7 @@ def subdomain_scan(
 
     if "oneforall" in tools:
         oneforall_command = (
-            "python3.8 /usr/src/github/OneForAll/oneforall.py --target {} run".format(
+            "python3 /usr/src/github/OneForAll/oneforall.py --target {} run".format(
                 domain.name, results_dir
             )
         )
@@ -2430,7 +2430,7 @@ def get_and_save_employees(scan_history, results_dir):
                 documents = yaml.dump(yaml_data, file)
 
     os.system(
-        "cd {} && python3.10 theHarvester.py -d {} -b all -f {}/theHarvester.html".format(
+        "cd {} && python3 theHarvester.py -d {} -b all -f {}/theHarvester.html".format(
             theHarvester_location, scan_history.domain.name, results_dir
         )
     )
