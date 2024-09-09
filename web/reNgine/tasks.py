@@ -622,7 +622,7 @@ def subdomain_scan(
                     )
                     for subdomain in newly_added_subdomain:
                         if subdomain.ip_addresses.all():
-                            message += f"\n{subdomain.name} ({','.join(subdomain.ip_addresses.all())})"
+                            message += f"\n{subdomain.name} ({','.join([str(x) for x in subdomain.ip_addresses.all()])})"
                         else:
                             message += f"\n{subdomain.name}"
                 else:
