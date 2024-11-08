@@ -103,11 +103,8 @@ RUN if [ "$(arch)" = "aarch64" ]; then \
 
 # ENV for Go
 ENV GOROOT="/usr/local/go"
-ENV PATH="${PATH}:${GOROOT}/bin"
-ENV PATH="${PATH}:${GOPATH}/bin"
-
 ENV GOPATH=/root/go
-ENV PATH="${PATH}:${GOROOT}/bin:${GOPATH}/bin"
+ENV PATH="${GOROOT}/bin:${GOPATH}/bin:${PATH}"
 
 # Make directory for app
 WORKDIR /usr/src/app
@@ -115,17 +112,17 @@ WORKDIR /usr/src/app
 # Download Go packages
 RUN go install -v github.com/tomnomnom/assetfinder@latest
 RUN go install -v github.com/hakluke/hakrawler@latest
-RUN go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
-RUN GO111MODULE=on go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-RUN GO111MODULE=on go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
-RUN GO111MODULE=on go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+RUN go install -v github.com/projectdiscovery/httpx/cmd/httpx@v1.6.9
+RUN GO111MODULE=on go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@v2.6.6
+RUN GO111MODULE=on go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@v3.3.5
+RUN GO111MODULE=on go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@v2.3.1
 RUN GO111MODULE=on go install -v github.com/tomnomnom/unfurl@latest
 RUN GO111MODULE=on go install -v -v github.com/bp0lr/gauplus@latest
 RUN GO111MODULE=on go install -v github.com/tomnomnom/waybackurls@latest
 RUN GO111MODULE=on go install -v github.com/jaeles-project/gospider@latest
 RUN GO111MODULE=on go install -v github.com/tomnomnom/gf@latest
 RUN go install -v github.com/owasp-amass/amass/v3/...@master
-RUN go install -v github.com/sensepost/gowitness@latest
+RUN go install -v github.com/sensepost/gowitness@2.5.1
 
 # Update Nuclei and Nuclei-Templates
 RUN nuclei -update
