@@ -1042,7 +1042,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
             existingFiles = []  # getFiles()
 
         for d1 in currentScanDomains:
-            toAdd = False
+            toAdd = isBrandNew = False
             skip = [x for x in skip_these_sites if d1.name.endswith(x)]
             if skip or d1.http_status in skip_these_codes:
                 logger.info(f"skipping {d1.name}")
@@ -1066,7 +1066,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                 logger.info(
                     f"could not find {d1.name} in previous successfull scans with screenshots"
                 )
-                continue
+                toAdd = isBrandNew = True
             elif len(d2WithScreens) == 0:
                 logger.info(
                     f"could not find any screenshot of {d1.name} in previous scans"
@@ -1076,7 +1076,8 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
             else:
                 d2 = d2WithScreens[0]
 
-            toAdd, res = compareImages(
+            if not isBrandNew:
+                toAdd, res = compareImages(
                 d1.screenshot_path, d2.screenshot_path, threshold
             )
 
@@ -1107,47 +1108,56 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                                 f"screenshot_slack_file_id for subdomain id {d1.id} updated in the database"
                             )
 
-                    if (
-                        not d2.screenshot_slack_file_id
-                        or d2.screenshot_slack_file_id == ""
-                    ):
-                        fpath = os.path.join(
-                            "/usr/src/scan_results", d2.screenshot_path
-                        )
-                        fname = (
-                            d2.screenshot_path.split("/")[0]
-                            + "_"
-                            + d2.screenshot_path.split("/")[-1]
-                        )
-                        prev_img = upload(fpath, fname, existingFiles)
-                        if not prev_img:
-                            logger.error(
-                                f"Could not upload screenshot for subdomain {d2.name} id {d2.id} file {fpath}"
+                    if isBrandNew:
+                        newDomainsWithScreens.append({
+                            "new": {
+                                    "subdomain": d1.name,
+                                    "date": d1.discovered_date,
+                                    "img": d1.screenshot_slack_file_id,
+                            }
+                        })
+                    else:
+                        if (
+                            not d2.screenshot_slack_file_id
+                            or d2.screenshot_slack_file_id == ""
+                        ):
+                            fpath = os.path.join(
+                                "/usr/src/scan_results", d2.screenshot_path
                             )
-                        if prev_img:
-                            d2.screenshot_slack_file_id = prev_img
-                            d2.save()
-                            logger.info(
-                                f"screenshot_slack_file_id for subdomain id {d2.id} updated in the database"
+                            fname = (
+                                d2.screenshot_path.split("/")[0]
+                                + "_"
+                                + d2.screenshot_path.split("/")[-1]
                             )
+                            prev_img = upload(fpath, fname, existingFiles)
+                            if not prev_img:
+                                logger.error(
+                                    f"Could not upload screenshot for subdomain {d2.name} id {d2.id} file {fpath}"
+                                )
+                            if prev_img:
+                                d2.screenshot_slack_file_id = prev_img
+                                d2.save()
+                                logger.info(
+                                    f"screenshot_slack_file_id for subdomain id {d2.id} updated in the database"
+                                )
 
-                    if not current_img or not prev_img:
-                        continue
+                        if not current_img or not prev_img:
+                            continue
 
-                    newDomainsWithScreens.append(
-                        {
-                            "current": {
-                                "subdomain": d1.name,
-                                "date": d1.discovered_date,
-                                "img": d1.screenshot_slack_file_id,
-                            },
-                            "prev": {
-                                "subdomain": d2.name,
-                                "date": d2.discovered_date,
-                                "img": d2.screenshot_slack_file_id,
-                            },
-                        }
-                    )
+                        newDomainsWithScreens.append(
+                            {
+                                "current": {
+                                    "subdomain": d1.name,
+                                    "date": d1.discovered_date,
+                                    "img": d1.screenshot_slack_file_id,
+                                },
+                                "prev": {
+                                    "subdomain": d2.name,
+                                    "date": d2.discovered_date,
+                                    "img": d2.screenshot_slack_file_id,
+                                },
+                            }
+                        )
 
         logger.info(f"New domains have screenshots: {newDomainsWithScreens}")
 
@@ -1181,6 +1191,12 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                         ) as fin:
                             template = fin.read()
                             logger.info(template)
+                        with open(
+                            "/usr/src/app/static/new_sub_notif_slack_template.txt",
+                            "r",
+                        ) as newsubfin:
+                            newSubTemplate = newsubfin.read()
+                            logger.info(newSubTemplate)
                     except Exception as ex:
                         logger.error(
                             "Could not read visual_changes_notif_slack_template.txt"
@@ -1189,27 +1205,41 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                         return
 
                     for subdomain_dict in newDomainsWithScreens:
-                        msg = template.replace(
-                            "<subdomain>", subdomain_dict["current"]["subdomain"]
-                        )
-                        msg = msg.replace(
-                            "<date1>",
-                            subdomain_dict["current"]["date"].strftime(
-                                "%d.%m.%Y, %H:%M:%S"
-                            ),
-                        )
-                        msg = msg.replace(
-                            "<date2>",
-                            subdomain_dict["prev"]["date"].strftime(
-                                "%d.%m.%Y, %H:%M:%S"
-                            ),
-                        )
-                        msg = msg.replace(
-                            "<curr_img_id>", subdomain_dict["current"]["img"]
-                        )
-                        msg = msg.replace(
-                            "<prev_img_id>", subdomain_dict["prev"]["img"]
-                        )
+                        if "new" in subdomain_dict:
+                            msg = newSubTemplate.replace(
+                                "<subdomain>", subdomain_dict["new"]["subdomain"]
+                            )
+                            msg = msg.replace(
+                                "<date1>",
+                                subdomain_dict["new"]["date"].strftime(
+                                    "%d.%m.%Y, %H:%M:%S"
+                                ),
+                            )
+                            msg = msg.replace(
+                                "<curr_img_id>", subdomain_dict["new"]["img"]
+                            )
+                        else:
+                            msg = template.replace(
+                                "<subdomain>", subdomain_dict["current"]["subdomain"]
+                            )
+                            msg = msg.replace(
+                                "<date1>",
+                                subdomain_dict["current"]["date"].strftime(
+                                    "%d.%m.%Y, %H:%M:%S"
+                                ),
+                            )
+                            msg = msg.replace(
+                                "<date2>",
+                                subdomain_dict["prev"]["date"].strftime(
+                                    "%d.%m.%Y, %H:%M:%S"
+                                ),
+                            )
+                            msg = msg.replace(
+                                "<curr_img_id>", subdomain_dict["current"]["img"]
+                            )
+                            msg = msg.replace(
+                                "<prev_img_id>", subdomain_dict["prev"]["img"]
+                            )
                         messages_with_img.append(msg)
 
                     for slack_msg in messages_with_img:
