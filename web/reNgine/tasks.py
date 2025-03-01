@@ -1995,6 +1995,7 @@ def vulnerability_scan(task, domain, yaml_configuration, results_dir, activity_i
                                 message += "\nVulnerable URL: {}".format(
                                     json_st["host"]
                                 )
+                                message+= f"\n{definitions.RENGINE_URL}/scan/detail/{task.id}"
                                 send_notification(message)
 
                         # send report to hackerone
