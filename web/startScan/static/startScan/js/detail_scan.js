@@ -645,10 +645,10 @@ function get_screenshot(scan_id){
       // return `<a href="/media/`+data+`" data-lightbox="screenshots" data-title="&lt;a target='_blank' href='`+row['http_url']+`'&gt;&lt;h3 style=&quot;color:white&quot;&gt;`+row['name']+`&lt;/h3&gt;&lt;/a&gt;"><img src="/media/`+data+`" class="img-fluid rounded mb-4 mt-4 screenshot" onerror="removeImageElement(this)"></a>`;
       // currently lookup is supported only for http_status, page title & subdomain name,
       interesting_field = data[subdomain]['is_interesting'] ? 'interesting' : '';
-      search_field = `${data[subdomain]['page_title']} ${data[subdomain]['name']} ${data[subdomain]['http_status']} ${interesting_field}`;
+      search_field = `${data[subdomain]['page_title']} ${data[subdomain]['http_url']} ${data[subdomain]['http_status']} ${interesting_field}`;
       link.setAttribute('data-lightbox', 'screenshot-gallery')
       link.setAttribute('href', '/media/' + data[subdomain]['screenshot_path'])
-      link.setAttribute('data-title', `<a target='_blank' href='`+data[subdomain]['http_url']+`'><h3 style="color:white">`+data[subdomain]['name']+`</h3></a>`);
+      link.setAttribute('data-title', `<a target='_blank' href='`+data[subdomain]['http_url']+`'><h3 style="color:white">`+data[subdomain]['http_url']+`</h3></a>`);
       link.classList.add('img-fluid');
       link.classList.add('rounded');
       link.classList.add('screenshot-gallery');
@@ -671,7 +671,7 @@ function get_screenshot(scan_id){
         http_status_badge = 'warning';
       }
       page_title = data[subdomain]['page_title'] ? data[subdomain]['page_title'] + '</br>': '' ;
-      subdomain_link = data[subdomain]['http_url'] ? `<a href="${data[subdomain]['http_url']}" target="_blank">${data[subdomain]['name']}</a>` : `<a href="https://${data[subdomain]['name']}" target="_blank">${data[subdomain]['name']}</a>`
+      subdomain_link = data[subdomain]['http_url'] ? `<a href="${data[subdomain]['http_url']}" target="_blank">${data[subdomain]['http_url']}</a>` : `<a href="https://${data[subdomain]['http_url']}" target="_blank">${data[subdomain]['http_url']}</a>`
       http_status = data[subdomain]['http_status'] ? `<span class="m-1 float-right badge badge-pills badge-${http_status_badge}">${data[subdomain]['http_status']}</span>` : '';
       figcaption.innerHTML = data[subdomain]['is_interesting'] ? page_title + subdomain_link + interesting_badge + http_status : page_title + subdomain_link + http_status;
       figure.appendChild(figcaption);

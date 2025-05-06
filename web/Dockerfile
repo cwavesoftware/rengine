@@ -84,7 +84,6 @@ RUN if [ "$(arch)" = "aarch64" ]; then \
       wget https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/1131003/chrome-linux.zip; \
       unzip chrome-linux.zip -d /opt/; \
       # geckodriver (used by EyeWitness) won't work on Apple Silicon chips, will break at runtime
-      # make sure you set 'gowitness' in the scan config file
       # Download geckodriver
       wget https://github.com/mozilla/geckodriver/releases/download/v0.32.0/geckodriver-v0.32.0-linux64.tar.gz; \
       tar -xvf geckodriver-v0.32.0-linux64.tar.gz; \
@@ -122,7 +121,6 @@ RUN GO111MODULE=on go install -v github.com/tomnomnom/waybackurls@latest
 RUN GO111MODULE=on go install -v github.com/jaeles-project/gospider@latest
 RUN GO111MODULE=on go install -v github.com/tomnomnom/gf@latest
 RUN go install -v github.com/owasp-amass/amass/v3/...@master
-RUN go install -v github.com/sensepost/gowitness@2.5.1
 
 # Update Nuclei and Nuclei-Templates
 RUN nuclei -update

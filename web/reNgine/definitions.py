@@ -60,6 +60,8 @@ VALIDATE_SUBDOMAINS = "validate_subdomains"
 FILTER_STATUS_CODE = "filter_status_code"
 SCREENSHOT_SKIP_THESE_SITES = "skip_these_sites"
 SCREENSHOT_SKIP_THESE_CODES = "skip_these_codes"
+HTTP_PORTS = "http_ports_to_probe"
+HTTPS_PORTS = "https_ports_to_probe"
 
 ###############################################################################
 # Wordlist DEFINITIONS

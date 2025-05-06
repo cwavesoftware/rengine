@@ -602,10 +602,9 @@ class SubdomainSerializer(serializers.ModelSerializer):
 
 class OnlyScreenshotsSubdomainSerializer(serializers.ModelSerializer):
 
-    ip_addresses = serializers.StringRelatedField(many=True)
     class Meta:
-        model = Subdomain
-        fields = ['name', 'screenshot_path', 'http_status', 'ip_addresses']
+        model = EndPoint
+        fields = ['http_url', 'screenshot_path', 'http_status']
 
 
 class EndpointSerializer(serializers.ModelSerializer):
