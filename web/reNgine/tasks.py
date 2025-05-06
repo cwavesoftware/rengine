@@ -116,7 +116,7 @@ def initiate_scan(
         )
 
     try:
-        current_scan_dir = domain.name + "_" + str(round(time.time() * 1000))
+        current_scan_dir = domain.name + "_" + str(task.id) + "_" + str(round(time.time() * 1000))
         os.mkdir(current_scan_dir)
         task.results_dir = current_scan_dir
         task.save()
@@ -179,7 +179,7 @@ def initiate_scan(
 
             update_last_activity(activity_id, 2)
             activity_id = create_scan_activity(task, "HTTP Crawler", 1)
-            http_crawler(task, domain, results_dir, activity_id)
+            http_crawler(task, domain, results_dir, yaml_configuration)
             update_last_activity(activity_id, 2)
         else:
             skip_subdomain_scan(task, domain, results_dir)
@@ -239,7 +239,7 @@ def initiate_scan(
             if task.vulnerability_scan:
                 if not task.subdomain_discovery:
                     activity_id = create_scan_activity(task, "HTTP Crawler", 1)
-                    http_crawler(task, domain, results_dir, activity_id)
+                    http_crawler(task, domain, results_dir, yaml_configuration)
                     update_last_activity(activity_id, 2)
                 activity_id = create_scan_activity(task, "Vulnerability Scan", 1)
                 vulnerability_scan(
@@ -671,25 +671,26 @@ def get_last_scan_subdomains(scan_id, domain_id):
         return subdomains
 
 
-def get_new_added_subdomain(current_scan_id, domain_id, compare_with_all_scans=True):
+def get_new_added_subdomain(scan_id, domain_id, compare_with_all_scans=True):
+    logger.debug(f"getting new added subdomains for scan ID {scan_id}")
     scan_history = (
         ScanHistory.objects.filter(domain=domain_id)
         .filter(subdomain_discovery=True)
-        .filter(id__lte=current_scan_id)
+        .filter(id__lt=scan_id)
         .filter(scan_status=definitions.SCAN_STATUS_COMPLETED)
     )
     logger.info(f"found {scan_history.count()} previous scans, including this one")
     if scan_history.count() > 1:
-        previous_scan = scan_history.order_by("-start_scan_date")[1]
+        previous_scan = scan_history.order_by("-id")[0]
         logger.info(f"previous scan ID: {previous_scan.id}")
         scanned_host_q1 = Subdomain.objects.filter(
-            scan_history__id=current_scan_id
+            scan_history__id=scan_id
         ).values("name")
         if compare_with_all_scans:
             logger.info("comparing with all scans")
             scanned_host_q2 = (
                 Subdomain.objects.filter(target_domain__id=domain_id)
-                .filter(scan_history__id__lt=current_scan_id)
+                .filter(scan_history__id__lt=scan_id)
                 .filter(scan_history__scan_status=definitions.SCAN_STATUS_COMPLETED)
                 .values("name")
                 .distinct("name")
@@ -703,7 +704,7 @@ def get_new_added_subdomain(current_scan_id, domain_id, compare_with_all_scans=T
         added_subdomain = scanned_host_q1.difference(scanned_host_q2)
         logger.info(f"{added_subdomain.count()} subdomains added")
 
-        return Subdomain.objects.filter(scan_history=current_scan_id).filter(
+        return Subdomain.objects.filter(scan_history=scan_id).filter(
             name__in=added_subdomain
         )
     else:
@@ -738,7 +739,7 @@ def get_removed_subdomain(scan_id, domain_id, compare_with_all_scans=True):
         )
 
 
-def http_crawler(task, domain, results_dir, activity_id):
+def http_crawler(task, domain, results_dir, yaml_configuration=None):
     """
     This function is runs right after subdomain gathering, and gathers important
     like page title, http status, etc
@@ -754,7 +755,21 @@ def http_crawler(task, domain, results_dir, activity_id):
     httpx_results_file = results_dir + "/httpx.json"
 
     subdomain_scan_results_file = results_dir + "/sorted_subdomain_collection.txt"
-    httpx_command = "httpx -status-code -content-length -title -tech-detect -cdn -ip -follow-host-redirects -random-agent -silent 1>/dev/null"
+    httpPorts = ""
+    if VISUAL_IDENTIFICATION in yaml_configuration and HTTP_PORTS in yaml_configuration[VISUAL_IDENTIFICATION]:
+        httpPorts = ",".join(
+            str(port)
+            for port in yaml_configuration[VISUAL_IDENTIFICATION][HTTP_PORTS]
+        )
+
+    httpsPorts = ""
+    if VISUAL_IDENTIFICATION in yaml_configuration and HTTPS_PORTS in yaml_configuration[VISUAL_IDENTIFICATION]:
+        httpsPorts = ",".join(
+            str(port)
+            for port in yaml_configuration[VISUAL_IDENTIFICATION][HTTPS_PORTS]
+        )
+
+    httpx_command = f"httpx -p http:{httpPorts},https:{httpsPorts} -status-code -content-length -title -tech-detect -cdn -ip -follow-host-redirects -random-agent -silent 1>/dev/null"
 
     proxy = get_random_proxy()
     if proxy:
@@ -832,6 +847,9 @@ def http_crawler(task, domain, results_dir, activity_id):
                 if "cnames" in json_st:
                     cname_list = ",".join(json_st["cnames"])
                     subdomain.cname = cname_list
+                if "port" in json_st:
+                    endpoint.port = json_st["port"]
+
                 discovered_date = timezone.now()
                 endpoint.discovered_date = discovered_date
                 subdomain.discovered_date = discovered_date
@@ -895,18 +913,8 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
     output_screenshots_path = results_dir + "/screenshots"
     result_csv_path = f"{output_screenshots_path}/Requests.csv"
     alive_subdomains_path = results_dir + "/alive.txt"
-    screenshots_db = f"{results_dir}_gowitness.sqlite3"
 
-    gowitness = False
-    if (
-        VISUAL_IDENTIFICATION in yaml_configuration
-        and USES_TOOLS in yaml_configuration[VISUAL_IDENTIFICATION]
-        and "gowitness" in yaml_configuration[VISUAL_IDENTIFICATION][USES_TOOLS]
-    ):
-        gowitness = True
-        cmd = f"gowitness file -f {alive_subdomains_path} --screenshot-path {output_screenshots_path} --chrome-path /opt/chrome-linux/chrome --db-location sqlite://{screenshots_db}"
-    else:
-        cmd = f"python3 /usr/src/github/EyeWitness/Python/EyeWitness.py -f {alive_subdomains_path} -d {output_screenshots_path} --no-prompt"
+    cmd = f"python3 /usr/src/github/EyeWitness/Python/EyeWitness.py -f {alive_subdomains_path} -d {output_screenshots_path} --no-prompt"
 
     if (
         VISUAL_IDENTIFICATION in yaml_configuration
@@ -939,81 +947,72 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         f"mkdir -p {output_screenshots_path} && {cmd} && chmod -R 777 {output_screenshots_path}"
     )
 
-    if gowitness:
-        conn = sqlite3.connect(screenshots_db)
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM urls")
-        rows = cur.fetchall()
-        for row in rows:
-            name = up.urlparse(row[4]).netloc
-            if (
-                Subdomain.objects.filter(scan_history__id=task.id)
-                .filter(name=name)
-                .exists()
-            ):
-                subdomain = Subdomain.objects.get(scan_history__id=task.id, name=name)
-                subdomain.screenshot_path = f"{output_screenshots_path}/{row[11]}"
-                subdomain.save()
-        conn.close()
-
-    else:  # EyeWitness
-        if os.path.isfile(result_csv_path):
-            with open(result_csv_path, "r") as file:
-                reader = csv.reader(file)
-                for row in reader:
-                    "Protocol,Port,Domain,Request Status,Screenshot Path, Source Path"
-                    (
-                        protocol,
-                        port,
-                        subdomain_name,
-                        status,
-                        screenshot_path,
-                        source_path,
-                    ) = tuple(row)
-                    logger.info(f"{protocol}:{port}:{subdomain_name}:{status}")
-                    subdomain_query = Subdomain.objects.filter(
-                        scan_history__id=task.id
-                    ).filter(name=subdomain_name)
-                    if (
-                        status == "Successful"
-                        and subdomain_query.exists()
-                        and os.path.isfile(screenshot_path)
-                    ):
-                        subdomain = subdomain_query.first()
-                        subdomain.screenshot_path = screenshot_path.replace(
-                            "/usr/src/scan_results/", ""
-                        )
-                        subdomain.save()
-                        logger.info(f"Added screenshot for {subdomain.name} to DB")
-        else:
-            logger.warning(
-                f"{result_csv_path} not found, probably no screenshots were taken"
-            )
+    # processing EyeWitness output
+    if os.path.isfile(result_csv_path):
+        with open(result_csv_path, "r") as file:
+            reader = csv.reader(file)
+            next(reader, None)  # Skip the header row
+            for row in reader:
+                "Protocol,Port,Domain,Request Status,Screenshot Path, Source Path"
+                (
+                    protocol,
+                    port,
+                    subdomain_name,
+                    status,
+                    screenshot_path,
+                    source_path,
+                ) = tuple(row)
+                logger.info(f"{protocol}:{port}:{subdomain_name}:{status}")
+                try:
+                    port = int(port)
+                except ValueError:
+                    logger.error(f"Port {port} is not a number")
+                    continue
+                endpoint_q = EndPoint.objects.filter(
+                    scan_history__id=task.id
+                ).filter(subdomain__name=subdomain_name).filter(port=port)
+                if (
+                    status == "Successful"
+                    and endpoint_q.exists()
+                    and os.path.isfile(screenshot_path)
+                ):
+                    endpoint = endpoint_q.first()
+                    endpoint.screenshot_path = screenshot_path.replace(
+                        "/usr/src/scan_results/", ""
+                    )
+                    endpoint.save()
+                    logger.info(f"Added screenshot for {endpoint.http_url} to DB")
+    else:
+        logger.warning(
+            f"{result_csv_path} not found, probably no screenshots were taken"
+        )
 
     if notification and notification[0].send_scan_status_notif:
         send_notification(
             "reNgine has finished gathering screenshots for {}".format(domain.name)
         )
 
-    if "subdomain" in locals():
+    if not "endpoint" in locals():
+        logger.debug("no web web services discovered in this scan")
+    else:
         currentScanId = task.id
         logger.info(
             f"Comparing current scan's screenshots with the last screenshot found in any successfull previous scan"
         )
 
-        prevDomains = (
-            Subdomain.objects.filter(target_domain=domain)
+        prevEndpoints = (
+            EndPoint.objects.filter(target_domain=domain)
             .filter(scan_history__scan_status=definitions.SCAN_STATUS_COMPLETED)
             .filter(scan_history__screenshot=True)
             .exclude(scan_history__id=currentScanId)
             .order_by("-id")
         )
-        logger.info(f"found {len(prevDomains)} prevDomains for visual comparison")
+        logger.info(f"found {len(prevEndpoints)} previous endpoints for visual comparison")
 
-        currentScanDomains = Subdomain.objects.filter(
+        currentScanEndpoints = EndPoint.objects.filter(
             scan_history__id=currentScanId
         ).exclude(screenshot_path__isnull=True)
-        newDomainsWithScreens = []
+        newEndpoints = []
 
         threshold = notification[0].visual_comparison_threshold if notification else 70
         skip_these_sites = []
@@ -1041,125 +1040,124 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
             # we'd rather upload duplicates than pulling >60 pages of files each scan
             existingFiles = []  # getFiles()
 
-        for d1 in currentScanDomains:
+        for e1 in currentScanEndpoints:
             toAdd = isBrandNew = False
-            skip = [x for x in skip_these_sites if d1.name.endswith(x)]
-            if skip or d1.http_status in skip_these_codes:
-                logger.info(f"skipping {d1.name}")
+            skip = [x for x in skip_these_sites if e1.subdomain.name.endswith(x)]
+            if skip or e1.http_status in skip_these_codes:
+                logger.info(f"skipping {e1.name}")
                 continue
 
-            d2 = (
-                Subdomain.objects.filter(name=d1.name)
+            e2 = (
+                EndPoint.objects.filter(http_url=e1.http_url)
                 .exclude(scan_history__id=currentScanId)
                 .filter(scan_history__scan_status=definitions.SCAN_STATUS_COMPLETED)
                 .filter(scan_history__screenshot=True)
                 .order_by("-id")
             )
-            d2WithScreens = (
-                d2.exclude(screenshot_path=None)
+            e2WithScreens = (
+                e2.exclude(screenshot_path=None)
                 .exclude(screenshot_path="")
                 .exclude(screenshot_path="none.png")
                 .order_by("-id")
             )
 
-            if len(d2) == 0:
+            if len(e2) == 0:
                 logger.info(
-                    f"could not find {d1.name} in previous successfull scans with screenshots"
+                    f"could not find {e1.http_url} in previous successfull scans with screenshots"
                 )
                 toAdd = isBrandNew = True
-            elif len(d2WithScreens) == 0:
+            elif len(e2WithScreens) == 0:
                 logger.info(
-                    f"could not find any screenshot of {d1.name} in previous scans"
+                    f"could not find any screenshot of {e1.http_url} in previous scans"
                 )
-                d2 = d2[0]
-                d2.screenshot_path = "none.png"
+                e2 = e2[0]
+                e2.screenshot_path = "none.png"
             else:
-                d2 = d2WithScreens[0]
+                e2 = e2WithScreens[0]
 
             if not isBrandNew:
                 toAdd, res = compareImages(
-                d1.screenshot_path, d2.screenshot_path, threshold
+                e1.screenshot_path, e2.screenshot_path, threshold
             )
 
             if toAdd:
                 if notification and notification[0].send_visual_changes_to_slack:
                     current_img = prev_img = None
                     if (
-                        not d1.screenshot_slack_file_id
-                        or d1.screenshot_slack_file_id == ""
+                        not e1.screenshot_slack_file_id
+                        or e1.screenshot_slack_file_id == ""
                     ):
                         fpath = os.path.join(
-                            "/usr/src/scan_results", d1.screenshot_path
+                            "/usr/src/scan_results", e1.screenshot_path
                         )
                         fname = (
-                            d1.screenshot_path.split("/")[0]
+                            e1.screenshot_path.split("/")[0]
                             + "_"
-                            + d1.screenshot_path.split("/")[-1]
+                            + e1.screenshot_path.split("/")[-1]
                         )
                         current_img = upload(fpath, fname, existingFiles)
                         if not current_img:
                             logger.error(
-                                f"Could not upload for subdomain {d2.name} id {d1.id} file {fpath}"
+                                f"Could not upload screenshot for {e1.http_url} id {e1.id} file {fpath}"
                             )
-                        if current_img:
-                            d1.screenshot_slack_file_id = current_img
-                            d1.save()
+                            continue
+                        else:
+                            e1.screenshot_slack_file_id = current_img
+                            e1.save()
                             logger.info(
-                                f"screenshot_slack_file_id for subdomain id {d1.id} updated in the database"
+                                f"screenshot_slack_file_id {e1.screenshot_slack_file_id} for {e1.http_url} id {e1.id} updated in the database"
                             )
 
                     if isBrandNew:
-                        newDomainsWithScreens.append({
+                        newEndpoints.append({
                             "new": {
-                                    "subdomain": d1.name,
-                                    "date": d1.discovered_date,
-                                    "img": d1.screenshot_slack_file_id,
+                                    "url": e1.http_url,
+                                    "date": e1.discovered_date,
+                                    "img": e1.screenshot_slack_file_id,
                             }
                         })
                     else:
                         if (
-                            not d2.screenshot_slack_file_id
-                            or d2.screenshot_slack_file_id == ""
+                            not e2.screenshot_slack_file_id
+                            or e2.screenshot_slack_file_id == ""
                         ):
                             fpath = os.path.join(
-                                "/usr/src/scan_results", d2.screenshot_path
+                                "/usr/src/scan_results", e2.screenshot_path
                             )
                             fname = (
-                                d2.screenshot_path.split("/")[0]
+                                e2.screenshot_path.split("/")[0]
                                 + "_"
-                                + d2.screenshot_path.split("/")[-1]
+                                + e2.screenshot_path.split("/")[-1]
                             )
                             prev_img = upload(fpath, fname, existingFiles)
                             if not prev_img:
                                 logger.error(
-                                    f"Could not upload screenshot for subdomain {d2.name} id {d2.id} file {fpath}"
+                                    f"Could not upload screenshot for {e2.http_url} id {e2.id} file {fpath}"
                                 )
-                            if prev_img:
-                                d2.screenshot_slack_file_id = prev_img
-                                d2.save()
+                                continue
+                            else:
+                                e2.screenshot_slack_file_id = prev_img
+                                e2.save()
                                 logger.info(
-                                    f"screenshot_slack_file_id for subdomain id {d2.id} updated in the database"
+                                    f"screenshot_slack_file_id for {e2.http_url} id {e2.id} updated in the database"
                                 )
 
-                        if not current_img or not prev_img:
-                            continue
-
-                        newDomainsWithScreens.append(
+                        newEndpoints.append(
                             {
                                 "current": {
-                                    "subdomain": d1.name,
-                                    "date": d1.discovered_date,
-                                    "img": d1.screenshot_slack_file_id,
+                                    "url": e1.http_url,
+                                    "date": e1.discovered_date,
+                                    "img": e1.screenshot_slack_file_id,
                                 },
                                 "prev": {
-                                    "subdomain": d2.name,
-                                    "date": d2.discovered_date,
-                                    "img": d2.screenshot_slack_file_id,
+                                    "url": e2.http_url,
+                                    "date": e2.discovered_date,
+                                    "img": e2.screenshot_slack_file_id,
                                 },
                             }
                         )
 
-        logger.info(f"New domains have screenshots: {newDomainsWithScreens}")
+        logger.info(f"New domains have screenshots: {newEndpoints}")
 
         threshold = (
             notification[0].percentage_threshold
@@ -1168,14 +1166,14 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
         )
 
         if (
-            newDomainsWithScreens
+            newEndpoints
             and notification
             and notification[0].send_visual_changes_notif
         ):
-            if len(newDomainsWithScreens) < (prevDomains.count() * threshold) / 100:
+            if len(newEndpoints) < (prevEndpoints.count() * threshold) / 100:
                 header = (
-                    "**{} Subdomains have significant visual changes on {}**".format(
-                        len(newDomainsWithScreens), domain.name
+                    "**{} websites have significant visual changes on {}**".format(
+                        len(newEndpoints), domain.name
                     )
                 )
                 message = ""
@@ -1199,46 +1197,46 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                             logger.info(newSubTemplate)
                     except Exception as ex:
                         logger.error(
-                            "Could not read visual_changes_notif_slack_template.txt"
+                            "Could not read slack notif temaplate files, check the path"
                         )
                         logger.debug(ex)
                         return
 
-                    for subdomain_dict in newDomainsWithScreens:
-                        if "new" in subdomain_dict:
+                    for endpoint_dict in newEndpoints:
+                        if "new" in endpoint_dict:
                             msg = newSubTemplate.replace(
-                                "<subdomain>", subdomain_dict["new"]["subdomain"]
+                                "<subdomain>", endpoint_dict["new"]["url"]
                             )
                             msg = msg.replace(
                                 "<date1>",
-                                subdomain_dict["new"]["date"].strftime(
+                                endpoint_dict["new"]["date"].strftime(
                                     "%d.%m.%Y, %H:%M:%S"
                                 ),
                             )
                             msg = msg.replace(
-                                "<curr_img_id>", subdomain_dict["new"]["img"]
+                                "<curr_img_id>", endpoint_dict["new"]["img"]
                             )
                         else:
                             msg = template.replace(
-                                "<subdomain>", subdomain_dict["current"]["subdomain"]
+                                "<subdomain>", endpoint_dict["current"]["url"]
                             )
                             msg = msg.replace(
                                 "<date1>",
-                                subdomain_dict["current"]["date"].strftime(
+                                endpoint_dict["current"]["date"].strftime(
                                     "%d.%m.%Y, %H:%M:%S"
                                 ),
                             )
                             msg = msg.replace(
                                 "<date2>",
-                                subdomain_dict["prev"]["date"].strftime(
+                                endpoint_dict["prev"]["date"].strftime(
                                     "%d.%m.%Y, %H:%M:%S"
                                 ),
                             )
                             msg = msg.replace(
-                                "<curr_img_id>", subdomain_dict["current"]["img"]
+                                "<curr_img_id>", endpoint_dict["current"]["img"]
                             )
                             msg = msg.replace(
-                                "<prev_img_id>", subdomain_dict["prev"]["img"]
+                                "<prev_img_id>", endpoint_dict["prev"]["img"]
                             )
                         messages_with_img.append(msg)
 
@@ -1246,8 +1244,8 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
                         logger.info("sending " + slack_msg)
                         send_slack_message(slack_msg, raw=True)
                 else:
-                    for subdomain_dict in newDomainsWithScreens:
-                        message += "\n• {}".format(subdomain)
+                    for endpoint_dict in newEndpoints:
+                        message += "\n• {}".format(endpoint)
                     message = header + message
                     send_notification(message)
 

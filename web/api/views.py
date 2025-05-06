@@ -556,9 +556,9 @@ class SubdomainsViewSet(viewsets.ModelViewSet):
         if scan_id:
             if "only_screenshot" in self.request.query_params:
                 return (
-                    Subdomain.objects.filter(scan_history__id=scan_id)
+                    EndPoint.objects.filter(scan_history__id=scan_id)
                     .exclude(screenshot_path__isnull=True)
-                    .only("name", "screenshot_path", "http_status")
+                    .only("http_url", "screenshot_path", "http_status")
                 )
             return Subdomain.objects.filter(scan_history=scan_id)
         elif target_id:

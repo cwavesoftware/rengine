@@ -13,7 +13,8 @@
       sublist3r, subfinder, oneforall ]\r\n  threads: 10\r\n  use_amass_config: false\r\n
       \ use_subfinder_config: false\r\n  compare_with: all_scans\r\n
       \ validate_subdomains: false\r\n\r\nvisual_identification:\r\n  uses_tools: [ eyewitness ]\r\n  timeout: 10\r\n
-      \ threads: 5\r\n  delay: 6\r\n  skip_these_sites: []\r\n  skip_these_codes: []\r\n\r\n
+      \ threads: 5\r\n  delay: 6\r\n  skip_these_sites: []\r\n  skip_these_codes: []\r\n  http_ports_to_probe: [80,8000,8080]\r\n
+      \ https_ports_to_probe: [443,1443,8443]\r\n\r\n
       osint:\r\n  discover: [ emails, metainfo, employees ]\r\n
       \ intensity: normal\r\n  # intensity: deep\r\n  dork: [ stackoverflow, 3rdparty,
       social_media, project_management, code_sharing, config_files, jenkins, wordpress_files,
@@ -45,7 +46,8 @@
       \ use_amass_config: false\r\n
       \ use_subfinder_config: false\r\n  compare_with: all_scans\r\n
       \ validate_subdomains: false\r\n\r\nvisual_identification:\r\n  uses_tools: [ eyewitness ]\r\n  timeout: 10\r\n
-      \ threads: 5\r\n  delay: 6\r\n  skip_these_sites: []\r\n  skip_these_codes: []"
+      \ threads: 5\r\n  delay: 6\r\n  skip_these_sites: []\r\n  skip_these_codes: []\r\n  http_ports_to_probe: [80,8000,8080]\r\n
+      \ https_ports_to_probe: [443,1443,8443]"
     default_engine: true
 - model: scanEngine.enginetype
   pk: 3
@@ -113,7 +115,8 @@
       \ use_amass_config: false\r\n
       \ use_subfinder_config: false\r\n  compare_with: all_scans\r\n
       \ validate_subdomains: false\r\n\r\nvisual_identification:\r\n  uses_tools: [ eyewitness ]\r\n  timeout: 10\r\n
-      \ threads: 5\r\n  delay: 6\r\n  skip_these_sites: []\r\n  skip_these_codes: []\r\n\r\nfetch_url:\r\n
+      \ threads: 5\r\n  delay: 6\r\n  skip_these_sites: []\r\n  skip_these_codes: []\r\n  http_ports_to_probe: [80,8000,8080]\r\n
+      \ https_ports_to_probe: [443,1443,8443]\r\n\r\nfetch_url:\r\n
       \ uses_tools: [ gauplus, hakrawler,
       waybackurls, gospider ]\r\n  intensity: normal\r\n  # intensity: deep\r\n  ignore_file_extension:
       [jpg, png, jpeg, gif]\r\n  gf_patterns: [ debug_logic, idor, img-traversal,

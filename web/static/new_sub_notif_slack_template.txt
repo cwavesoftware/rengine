@@ -1,11 +1,14 @@
 {
 	"blocks": [
 		{
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "new website: <subdomain> on <date1>"
+            }
+        },
+		{
 			"type": "image",
-			"title": {
-				"type": "plain_text",
-				"text": "<subdomain> on <date1>"
-			},
 			"slack_file": {
 				"id": "<curr_img_id>"
 			},

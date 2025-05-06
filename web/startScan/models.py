@@ -248,6 +248,9 @@ class EndPoint(models.Model):
     is_default = models.BooleanField(null=True, blank=True, default=False)
     matched_gf_patterns = models.CharField(max_length=2000, null=True, blank=True)
     technologies = models.ManyToManyField("Technology", related_name="technology")
+    screenshot_path = models.CharField(max_length=1000, null=True, blank=True)
+    screenshot_slack_file_id = models.CharField(max_length=1000, null=True, blank=True)
+    port = models.IntegerField(default=0, null=True, blank=True)
 
     def __str__(self):
         return self.http_url

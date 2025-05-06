@@ -1,22 +1,28 @@
 {
 	"blocks": [
+		 {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "<subdomain> on <date1> below versus"
+            }
+        },
 		{
 			"type": "image",
-			"title": {
-				"type": "plain_text",
-				"text": "<subdomain> on <date1>"
-			},
 			"slack_file": {
 				"id": "<curr_img_id>"
 			},
 			"alt_text": ""
 		},
 		{
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "<subdomain> on <date2> below"
+            }
+		},
+		{
 			"type": "image",
-			"title": {
-				"type": "plain_text",
-				"text": "<subdomain> on <date2>"
-			},
 			"slack_file": {
 				"id": "<prev_img_id>"
 			},
