@@ -1044,7 +1044,7 @@ def grab_screenshot(task, domain, yaml_configuration, results_dir, activity_id):
             toAdd = isBrandNew = False
             skip = [x for x in skip_these_sites if e1.subdomain.name.endswith(x)]
             if skip or e1.http_status in skip_these_codes:
-                logger.info(f"skipping {e1.name}")
+                logger.info(f"skipping {e1.subdomain.name}")
                 continue
 
             e2 = (
