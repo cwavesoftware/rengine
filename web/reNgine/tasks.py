@@ -28,7 +28,7 @@ from scanEngine.models import EngineType
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from celery import shared_task
-from datetime import datetime
+from datetime import datetime as dt
 from degoogle import degoogle
 from django.utils import timezone, dateformat
 from django.shortcuts import get_object_or_404
@@ -116,7 +116,7 @@ def initiate_scan(
         )
 
     try:
-        current_scan_dir = domain.name + "_" + str(task.id) + "_" + str(round(time.time() * 1000))
+        current_scan_dir = domain.name + "_" + str(task.id) + "_" + dt.now().strftime("%Y%m%d_%H%M%S")
         os.mkdir(current_scan_dir)
         task.results_dir = current_scan_dir
         task.save()
