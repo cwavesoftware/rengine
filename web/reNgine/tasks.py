@@ -1724,29 +1724,36 @@ def fetch_endpoints(task, domain, yaml_configuration, results_dir, activity_id):
                             endpoint = EndPoint.objects.get(
                                 scan_history=task, http_url=url
                             )
-                            earlier_pattern = endpoint.matched_gf_patterns
-                            new_pattern = (
-                                earlier_pattern + "," + pattern
-                                if earlier_pattern
-                                else pattern
-                            )
-                            endpoint.matched_gf_patterns = new_pattern
-                        except Exception as e:
-                            # add the url in db
-                            logger.error(e)
-                            logger.info("Adding URL " + url)
-                            endpoint = EndPoint()
-                            endpoint.http_url = url
-                            endpoint.target_domain = domain
-                            endpoint.scan_history = task
-                            try:
-                                _subdomain = Subdomain.objects.get(
-                                    scan_history=task, name=get_subdomain_from_url(url)
+                            if endpoint.exists():
+                                # add the pattern to the endpoint
+                                # if it already exists, append it
+                                # else create a new one
+                                logger.info("Adding GF pattern " + pattern)
+                                earlier_pattern = endpoint.matched_gf_patterns
+                                new_pattern = (
+                                    earlier_pattern + "," + pattern
+                                    if earlier_pattern
+                                    else pattern
                                 )
-                                endpoint.subdomain = _subdomain
-                            except Exception as e:
-                                logger.exception(e)
-                            endpoint.matched_gf_patterns = pattern
+                                endpoint.matched_gf_patterns = new_pattern
+                            else:
+                                # add the url in db
+                                logger.info("Adding URL " + url)
+                                endpoint = EndPoint()
+                                endpoint.http_url = url
+                                endpoint.target_domain = domain
+                                endpoint.scan_history = task
+                                endpoint.matched_gf_patterns = pattern
+                                try:
+                                    _subdomain = Subdomain.objects.get(
+                                        scan_history=task, name=get_subdomain_from_url(url)
+                                    )
+                                    endpoint.subdomain = _subdomain
+                                except Exception as e:
+                                    logger.exception(e)
+                                
+                        except Exception as e:
+                            logger.exception(e)
                         finally:
                             endpoint.save()
 
