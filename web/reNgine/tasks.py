@@ -1721,10 +1721,11 @@ def fetch_endpoints(task, domain, yaml_configuration, results_dir, activity_id):
                     for line in gf_output:
                         url = line.rstrip("\n")
                         try:
-                            endpoint = EndPoint.objects.get(
+                            endpoint = EndPoint.objects.filter(
                                 scan_history=task, http_url=url
                             )
                             if endpoint.exists():
+                                endpoint=endpoint[0]
                                 # add the pattern to the endpoint
                                 # if it already exists, append it
                                 # else create a new one
@@ -1751,11 +1752,9 @@ def fetch_endpoints(task, domain, yaml_configuration, results_dir, activity_id):
                                     endpoint.subdomain = _subdomain
                                 except Exception as e:
                                     logger.exception(e)
-                                
+                            endpoint.save()
                         except Exception as e:
                             logger.exception(e)
-                        finally:
-                            endpoint.save()
 
 
 def vulnerability_scan(task, domain, yaml_configuration, results_dir, activity_id):
