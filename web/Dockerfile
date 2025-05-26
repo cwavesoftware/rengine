@@ -71,7 +71,7 @@ RUN python3 -m pip install -r /usr/src/github/OneForAll/requirements.txt
 RUN git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/laramies/theHarvester /usr/src/github/theHarvester
 
 RUN python3 get-pip.py
-RUN python3 -m pip install -r /usr/src/github/theHarvester/requirements/base.txt
+RUN python3 -m pip install -r /usr/src/github/theHarvester/requirements/dev.txt
 RUN git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/davidtavarez/pwndb /usr/src/github/pwndb
 
 # go
