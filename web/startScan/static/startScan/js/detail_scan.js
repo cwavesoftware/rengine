@@ -636,7 +636,7 @@ function get_screenshot(scan_id){
   gridzyElement.setAttribute('data-gridzy-desiredwidth', 350);
   gridzyElement.setAttribute('data-gridzySearchField', "#screenshot-search");
   var interesting_badge = `<span class="m-1 float-right badge badge-pills badge-danger">Interesting</span>`;
-  $.getJSON(`/api/listSubdomains/?scan_id=${scan_id}&no_page&only_screenshot`, function(data) {
+  $.getJSON(`/api/listEndpoints/?scan_history=${scan_id}&no_page&only_screenshot`, function(data) {
     $("#screenshot-loader").remove();
     $("#filter-screenshot").show();
     for (var subdomain in data) {

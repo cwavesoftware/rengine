@@ -603,8 +603,8 @@ class SubdomainSerializer(serializers.ModelSerializer):
 class OnlyScreenshotsSubdomainSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = EndPoint
-        fields = ['http_url', 'screenshot_path', 'http_status']
+        model = Subdomain
+        fields = ['name']
 
 
 class EndpointSerializer(serializers.ModelSerializer):

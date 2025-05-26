@@ -554,12 +554,6 @@ class SubdomainsViewSet(viewsets.ModelViewSet):
         target_name = req.query_params.get("target_name")
 
         if scan_id:
-            if "only_screenshot" in self.request.query_params:
-                return (
-                    EndPoint.objects.filter(scan_history__id=scan_id)
-                    .exclude(screenshot_path__isnull=True)
-                    .only("http_url", "screenshot_path", "http_status")
-                )
             return Subdomain.objects.filter(scan_history=scan_id)
         elif target_id:
             return Subdomain.objects.filter(target_domain__id=target_id).distinct(
@@ -1029,6 +1023,9 @@ class EndPointViewSet(viewsets.ModelViewSet):
         if gf_tag:
             self.queryset = self.queryset.filter(matched_gf_patterns__icontains=gf_tag)
 
+        if "only_screenshot" in self.request.query_params:
+            self.queryset = self.queryset.exclude(screenshot_path__isnull=True)
+
         return self.queryset
 
     def filter_queryset(self, qs):
@@ -1059,7 +1056,7 @@ class EndPointViewSet(viewsets.ModelViewSet):
             order_col = "-{}".format(order_col)
         # if the search query is separated by = means, it is a specific lookup
         # divide the search query into two half and lookup
-        if (
+        if search_value and (
             "=" in search_value
             or "&" in search_value
             or "|" in search_value
@@ -1085,6 +1082,8 @@ class EndPointViewSet(viewsets.ModelViewSet):
         return qs.order_by(order_col)
 
     def general_lookup(self, search_value):
+        if not search_value:
+            return self.queryset
         qs = self.queryset.filter(
             Q(http_url__icontains=search_value)
             | Q(page_title__icontains=search_value)
@@ -1193,6 +1192,11 @@ class EndPointViewSet(viewsets.ModelViewSet):
                     print(e)
         return qs
 
+    def paginate_queryset(self, queryset, view=None):
+        if "no_page" in self.request.query_params:
+            return None
+        return self.paginator.paginate_queryset(queryset, self.request, view=self)
+    
 
 class VulnerabilityViewSet(viewsets.ModelViewSet):
     queryset = Vulnerability.objects.none()
