@@ -4,7 +4,7 @@
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "<subdomain> on <date1> below versus"
+                "text": "<subdomain> on <date1> below"
             }
         },
 		{
@@ -18,7 +18,7 @@
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "<subdomain> on <date2> below"
+                "text": "versus <subdomain> on <date2> below"
             }
 		},
 		{
