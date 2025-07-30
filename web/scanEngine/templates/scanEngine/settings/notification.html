@@ -142,10 +142,22 @@ reNgine Settings
                 </label>
               </div>
             </div>
+            <div class="form-check pl-0 mt-1">
+              <div class="custom-control">
+                <label class="text-dark" for="new_subs_notif_exceptions">
+                  Except
+                  <br>
+                  {{form.send_new_subdomains_notif_exceptions}}
+                  <span class="text-muted">
+                    (comma separated list of subdomains to exclude from new subdomains notification)
+                  </span>
+                </label>
+              </div>
+            </div>
 
             <div class="form-check pl-0 mt-1">
               <div class="custom-control custom-checkbox checkbox-info">
-                {{form.send_removed_subdomains_notif}}
+                {{form.send_removed_subdomains_notif}}s
                 <label class="custom-control-label text-dark" for="send_removed_subdomains_notif">
                   Removed Subdomains
                   <br>

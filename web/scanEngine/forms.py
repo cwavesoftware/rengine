@@ -371,6 +371,17 @@ class NotificationForm(forms.ModelForm):
         ),
     )
 
+    send_new_subdomains_notif_exceptions = forms.CharField(
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "id": "send_new_subdomains_notif_exceptions",
+                "placeholder": "regex supported, e.g. (.*)example.com(.*)",
+            }
+        ),
+    )
+
     percentage_threshold = forms.IntegerField(
         required=True,
         widget=forms.NumberInput(
@@ -447,6 +458,7 @@ class NotificationForm(forms.ModelForm):
         self.initial["send_interesting_notif"] = key.send_interesting_notif
         self.initial["send_vuln_notif"] = key.send_vuln_notif
         self.initial["send_new_subdomains_notif"] = key.send_new_subdomains_notif
+        self.initial["send_new_subdomains_notif_exceptions"] = key.send_new_subdomains_notif_exceptions
 
         self.initial["send_scan_output_file"] = key.send_scan_output_file
 
@@ -482,6 +494,7 @@ class NotificationForm(forms.ModelForm):
         self.initial["send_interesting_notif"] = True
         self.initial["send_vuln_notif"] = True
         self.initial["send_new_subdomains_notif"] = True
+        self.initial["send_new_subdomains_notif_exceptions"] = ""
 
         self.initial["send_scan_output_file"] = True
         self.initial["percentage_threshold"] = 0

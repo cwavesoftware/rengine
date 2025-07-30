@@ -76,6 +76,7 @@ class Notification(models.Model):
     send_interesting_notif = models.BooleanField(default=True)
     send_vuln_notif = models.BooleanField(default=True)
     send_new_subdomains_notif = models.BooleanField(default=True)
+    send_new_subdomains_notif_exceptions = models.CharField(max_length=200, null=True, blank=True)
     send_removed_subdomains_notif = models.BooleanField(default=False)
     send_visual_changes_notif = models.BooleanField(default=True)
 

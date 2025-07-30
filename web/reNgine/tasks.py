@@ -43,6 +43,7 @@ from .slack import *
 from celery.utils.log import get_task_logger
 import socket
 from custom_logger import NotifyLogHandler
+import re
 
 """
 task for background scan
@@ -620,6 +621,15 @@ def subdomain_scan(
                     message = "**{} New Subdomains Discovered on domain {}**".format(
                         newly_added_subdomain.count(), domain.name
                     )
+                    exceptions = notification[0].send_new_subdomains_notif_exceptions
+                    if exceptions:
+                        exceptions = exceptions.split(",")
+                        if exceptions:
+                            # Remove subdomains matching any regex in exceptions
+                            regexes = [re.compile(exc.strip()) for exc in exceptions if exc.strip()]
+                            newly_added_subdomain = newly_added_subdomain.exclude(
+                                name__regex="|".join([exc.pattern for exc in regexes])
+                            )
                     for subdomain in newly_added_subdomain:
                         if subdomain.ip_addresses.all():
                             message += f"\n{subdomain.name} ({','.join([str(x) for x in subdomain.ip_addresses.all()])})"
@@ -708,7 +718,7 @@ def get_new_added_subdomain(scan_id, domain_id, compare_with_all_scans=True):
             name__in=added_subdomain
         )
     else:
-        logger.info(f"no scan history")
+        logger.info(f"nothin to compare with")
 
 
 def get_removed_subdomain(scan_id, domain_id, compare_with_all_scans=True):
