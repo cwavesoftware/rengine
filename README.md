@@ -204,8 +204,6 @@ reNgine would not have been possible without the following individuals/organizat
   - OneForAll
 - FortyNorthSecurity
   - EyeWitness
-- Christian Martorella
-  - theHarvester
 - Davidtavarez
   - pwndb
 - Deepseagirl

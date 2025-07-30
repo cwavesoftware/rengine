@@ -2216,7 +2216,7 @@ def perform_osint(task, domain, yaml_configuration, results_dir):
 
 def osint_discovery(task, domain, yaml_configuration, results_dir):
     if ALL in yaml_configuration[OSINT][OSINT_DISCOVER]:
-        osint_lookup = "emails metainfo employees"
+        osint_lookup = "emails metainfo"
     else:
         osint_lookup = " ".join(
             str(lookup) for lookup in yaml_configuration[OSINT][OSINT_DISCOVER]
@@ -2260,9 +2260,6 @@ def osint_discovery(task, domain, yaml_configuration, results_dir):
     if "emails" in osint_lookup:
         get_and_save_emails(task, results_dir)
         get_and_save_leaked_credentials(task, results_dir)
-
-    if "employees" in osint_lookup:
-        get_and_save_employees(task, results_dir)
 
 
 def dorking(scan_history, yaml_configuration):
@@ -2459,63 +2456,6 @@ def get_and_save_dork_results(dork, type, scan_history, in_target=False):
             type=type, description=result["desc"], url=result["url"]
         )
         scan_history.dorks.add(dork)
-
-
-def get_and_save_employees(scan_history, results_dir):
-    theHarvester_location = "/usr/src/github/theHarvester"
-
-    # update proxies.yaml
-    if Proxy.objects.all().exists():
-        proxy = Proxy.objects.all()[0]
-        if proxy.use_proxy:
-            proxy_list = proxy.proxies.splitlines()
-            yaml_data = {"http": proxy_list}
-
-            with open(theHarvester_location + "/proxies.yaml", "w") as file:
-                documents = yaml.dump(yaml_data, file)
-
-    os.system(
-        "cd {} && python3 theHarvester.py -d {} -b all -f {}/theHarvester.html".format(
-            theHarvester_location, scan_history.domain.name, results_dir
-        )
-    )
-
-    file_location = results_dir + "/theHarvester.html"
-    # delete proxy environ var
-    if os.environ.get(("https_proxy")):
-        del os.environ["https_proxy"]
-
-    if os.environ.get(("HTTPS_PROXY")):
-        del os.environ["HTTPS_PROXY"]
-
-    if os.path.isfile(file_location):
-        logger.info("Parsing theHarvester results")
-        options = FirefoxOptions()
-        options.add_argument("--headless")
-        driver = webdriver.Firefox(options=options)
-        driver.get("file://" + file_location)
-        tabledata = driver.execute_script("return tabledata")
-        # save email addresses and linkedin employees
-        for data in tabledata:
-            if data["record"] == "email":
-                _email = data["result"]
-                email, _ = Email.objects.get_or_create(address=_email)
-                scan_history.emails.add(email)
-            elif data["record"] == "people":
-                _employee = data["result"]
-                split_val = _employee.split("-")
-                name = split_val[0]
-                if len(split_val) == 2:
-                    designation = split_val[1]
-                else:
-                    designation = ""
-                employee, _ = Employee.objects.get_or_create(
-                    name=name, designation=designation
-                )
-                scan_history.employees.add(employee)
-        driver.quit()
-
-        logger.info(tabledata)
 
 
 def get_and_save_emails(scan_history, results_dir):
