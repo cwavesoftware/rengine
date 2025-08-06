@@ -62,3 +62,4 @@ cookiejar
 scan_results
 zones.lst
 subdomains.txt
+.dccache

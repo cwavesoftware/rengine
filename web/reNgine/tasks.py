@@ -618,9 +618,6 @@ def subdomain_scan(
                 if (
                     (newly_added_subdomain.count()) < (to_compare * threshold) / 100
                 ) or (newly_added_subdomain.count() < absolute_threshold):
-                    message = "**{} New Subdomains Discovered on domain {}**".format(
-                        newly_added_subdomain.count(), domain.name
-                    )
                     exceptions = notification[0].send_new_subdomains_notif_exceptions
                     if exceptions:
                         exceptions = exceptions.split(",")
@@ -630,6 +627,9 @@ def subdomain_scan(
                             newly_added_subdomain = newly_added_subdomain.exclude(
                                 name__regex="|".join([exc.pattern for exc in regexes])
                             )
+                    message = "**{} New Subdomains Discovered on domain {}**".format(
+                        newly_added_subdomain.count(), domain.name
+                    )
                     for subdomain in newly_added_subdomain:
                         if subdomain.ip_addresses.all():
                             message += f"\n{subdomain.name} ({','.join([str(x) for x in subdomain.ip_addresses.all()])})"
