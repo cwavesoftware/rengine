@@ -589,6 +589,16 @@ def subdomain_scan(
         )
         absolute_threshold = notification[0].absolute_threshold
 
+        exceptions = notification[0].send_new_subdomains_notif_exceptions
+        if exceptions:
+            exceptions = exceptions.split(",")
+            if exceptions:
+                # Remove subdomains matching any regex in exceptions
+                regexes = [re.compile(exc.strip()) for exc in exceptions if exc.strip()]
+                newly_added_subdomain = newly_added_subdomain.exclude(
+                    name__regex="|".join([exc.pattern for exc in regexes])
+                )
+
         if newly_added_subdomain:
             threshold = (
                 notification[0].percentage_threshold
@@ -618,15 +628,7 @@ def subdomain_scan(
                 if (
                     (newly_added_subdomain.count()) < (to_compare * threshold) / 100
                 ) or (newly_added_subdomain.count() < absolute_threshold):
-                    exceptions = notification[0].send_new_subdomains_notif_exceptions
-                    if exceptions:
-                        exceptions = exceptions.split(",")
-                        if exceptions:
-                            # Remove subdomains matching any regex in exceptions
-                            regexes = [re.compile(exc.strip()) for exc in exceptions if exc.strip()]
-                            newly_added_subdomain = newly_added_subdomain.exclude(
-                                name__regex="|".join([exc.pattern for exc in regexes])
-                            )
+                    
                     message = "**{} New Subdomains Discovered on domain {}**".format(
                         newly_added_subdomain.count(), domain.name
                     )
