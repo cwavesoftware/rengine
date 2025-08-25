@@ -1800,7 +1800,7 @@ def vulnerability_scan(task, domain, yaml_configuration, results_dir, activity_i
 
     vulnerability_scan_input_file = results_dir + urls_path
 
-    nuclei_command = "nuclei -l {} -j -o {}".format(
+    nuclei_command = "nuclei -silent -duc -nc -l {} -j -o {}".format(
         vulnerability_scan_input_file, vulnerability_result_path
     )
 
@@ -1903,8 +1903,8 @@ def vulnerability_scan(task, domain, yaml_configuration, results_dir, activity_i
     else:
         severity = "critical, high, medium, low, info"
 
-    # update nuclei before running scan
-    os.system("nuclei -update; nuclei -update-templates")
+    # update nuclei templates before running scan
+    os.system("nuclei -update-templates")
 
     for _severity in severity.split(","):
         # delete any existing vulnerability.json file
@@ -1927,6 +1927,9 @@ def vulnerability_scan(task, domain, yaml_configuration, results_dir, activity_i
                 for line in lines:
                     json_st = json.loads(line.strip())
                     host = json_st["host"]
+                    if "error" in json_st:
+                        logger.error(f"nuclei: {host}: {json_st['error']}")
+                        continue
                     _subdomain = get_subdomain_from_url(host)
                     try:
                         subdomain = Subdomain.objects.get(
@@ -1967,12 +1970,7 @@ def vulnerability_scan(task, domain, yaml_configuration, results_dir, activity_i
                             vulnerability.description = json_st["info"]["description"]
                         if "reference" in json_st["info"]:
                             vulnerability.reference = json_st["info"]["reference"]
-                        if (
-                            "matched" in json_st
-                        ):  # TODO remove in rengine 1.1. 'matched' isn't used in nuclei 2.5.3
-                            vulnerability.http_url = json_st["matched"]
-                        if "matched-at" in json_st:
-                            vulnerability.http_url = json_st["matched-at"]
+                        vulnerability.http_url = host
                         if "template-id" in json_st:
                             vulnerability.template_used = json_st["template-id"]
                         if "description" in json_st:
