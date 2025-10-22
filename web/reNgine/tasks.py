@@ -590,7 +590,7 @@ def subdomain_scan(
         absolute_threshold = notification[0].absolute_threshold
 
         exceptions = notification[0].send_new_subdomains_notif_exceptions
-        if exceptions:
+        if newly_added_subdomain and exceptions:
             exceptions = exceptions.split(",")
             if exceptions:
                 # Remove subdomains matching any regex in exceptions
