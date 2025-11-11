@@ -50,7 +50,7 @@ def uploadFile(fpath, fname):
         retries = 0
         while retries < 3:
             try:
-                result = client.files_upload(file=fcontent, filename=fname)
+                result = client.files_upload_v2(file=fcontent, filename=fname)
                 retries = 3
             except Exception as ex:
                 logger.error(ex)
