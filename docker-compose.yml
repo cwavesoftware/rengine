@@ -1,6 +1,6 @@
 services:
   db:
-    restart: always
+    restart: unless-stopped
     image: "postgres:12.3-alpine"
     shm_size: 1g
     mem_limit: "8g"
@@ -18,21 +18,20 @@ services:
   redis:
     image: "redis:alpine"
     hostname: rengine-redis
-    restart: always
+    restart: unless-stopped
 
   celery:
     build:
       context: ./web
     image: cwavesoftware/rengine-web:latest
     platform: linux/amd64
-    restart: always
+    restart: unless-stopped
     mem_limit: "8g"
     mem_reservation: "4g"
     entrypoint: /usr/src/app/celery-entrypoint.sh
     command: watchmedo auto-restart --recursive --pattern="*.py" --directory="/usr/src/app/reNgine/" -- celery -A reNgine worker --concurrency ${MAX_CONCURRENT_SCANS?MAX_CONCURRENT_SCANS_NOT_DEFINED} -l INFO
     volumes:
       - ./web:/usr/src/app
-      - github_repos:/usr/src/github
       - wordlist:/usr/src/wordlist
       - ./scan_results:/usr/src/scan_results
       - gf_patterns:/root/.gf
@@ -61,7 +60,7 @@ services:
   celery-beat:
     image: cwavesoftware/rengine-web:latest
     platform: linux/amd64
-    restart: always
+    restart: unless-stopped
     entrypoint: /usr/src/app/beat-entrypoint.sh
     command: celery -A reNgine beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
     depends_on:
@@ -79,7 +78,6 @@ services:
       - RENGINE_URL=${RENGINE_URL?RENGINE_URL_NOT_DEFINED}
     volumes:
       - ./web:/usr/src/app
-      - github_repos:/usr/src/github
       - wordlist:/usr/src/wordlist
       - ./scan_results:/usr/src/scan_results
       - gf_patterns:/root/.gf
@@ -90,7 +88,7 @@ services:
     image: cwavesoftware/rengine-web:latest
     platform: linux/amd64
     entrypoint: /usr/src/app/entrypoint.sh
-    restart: always
+    restart: unless-stopped
     mem_limit: "8g"
     mem_reservation: "4g"
     environment:
@@ -107,7 +105,6 @@ services:
 
     volumes:
       - ./web:/usr/src/app
-      - github_repos:/usr/src/github
       - wordlist:/usr/src/wordlist
       - ./scan_results:/usr/src/scan_results
       - gf_patterns:/root/.gf
@@ -122,7 +119,7 @@ services:
 
   # tor:
   #   image: peterdavehello/tor-socks-proxy
-  #   restart: always
+  #   restart: unless-stopped
   #   depends_on:
   #     - web
   #   ports:
